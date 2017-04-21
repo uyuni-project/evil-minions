@@ -4,8 +4,9 @@ import logging
 log = logging.getLogger(__name__)
 
 class Reactor(object):
-    def __init__(self, minion_id, channel):
+    def __init__(self, minion_id, tok, channel):
         self.minion_id = minion_id
+        self.tok = tok
         self.channel = channel
 
     @tornado.gen.coroutine

@@ -8,27 +8,21 @@ import zmq.eventloop.ioloop
 import salt.log
 import salt.transport.client
 
-from reactor import Reactor
+import reactor
+import minion_events
 
 @tornado.gen.coroutine
 def connect_master():
     minion_id = opts['id']
     pub_channel = salt.transport.client.AsyncPubChannel.factory(opts, **factory_kwargs)
     tok = pub_channel.auth.gen_token('salt')
-    load = {'id': minion_id,
-            'cmd': '_minion_event',
-            'pretag': None,
-            'tok': tok,
-            'tag': "minion_start",
-            'data': 'Evil minion started up'}
     yield pub_channel.connect()
     req_channel = salt.transport.client.AsyncReqChannel.factory(opts, **factory_kwargs)
 
-    reactor = Reactor(minion_id, req_channel)
-    pub_channel.on_recv(lambda load: reactor.dispatch(load))
+    r = reactor.Reactor(minion_id, tok, req_channel)
+    pub_channel.on_recv(lambda load: r.dispatch(load))
 
-    yield req_channel.send(load, timeout=60)
-
+    yield minion_events.start(minion_id, tok, req_channel)
 
 salt.log.setup_console_logger(log_level='debug')
 log = logging.getLogger(__name__)
