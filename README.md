@@ -10,7 +10,7 @@ Ongoing development, functionality is less than minimal at this point (can get a
 
 ### Installation
 
- - install salt 2015.8.12
+ - install salt-minion 2015.8.12
  - clone this git repository
 
 ### Usage
