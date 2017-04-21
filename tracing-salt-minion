@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+'''
+This script is used to kick off a salt minion daemon
+'''
+
+import pprint
+import time
+
+import tornado.gen
+
+from salt.scripts import salt_minion
+
+from salt.transport.zeromq import AsyncZeroMQReqChannel
+from salt.transport.zeromq import AsyncZeroMQPubChannel
+
+current_milli_time = lambda: int(round(time.time() * 1000))
+
+with open('/tmp/minion-trace.txt', 'w+') as log_file:
+    pp = pprint.PrettyPrinter(indent=4, stream=log_file)
+    last_pub_time = current_milli_time()
+
+    @tornado.gen.coroutine
+    def logging_send(self, load, **kwargs):
+        log_file.write("Time since last publication:\n")
+        log_file.write("%d\n" % (current_milli_time() - last_pub_time))
+        log_file.write("Request to master:\n")
+        pp.pprint(load)
+        log_file.flush()
+        ret = yield self.send_original(load, **kwargs)
+        raise tornado.gen.Return(ret)
+
+    def logging_on_recv(self, callback):
+        def logging_callback(load):
+            global last_pub_time
+            last_pub_time = current_milli_time()
+            log_file.write("Publication from master:\n")
+            pp.pprint(load)
+            log_file.flush()
+            callback(load)
+        return self.on_recv_original(logging_callback)
+
+    AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
+    AsyncZeroMQReqChannel.send = logging_send
+
+    AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
+    AsyncZeroMQPubChannel.on_recv = logging_on_recv
+
+    salt_minion()

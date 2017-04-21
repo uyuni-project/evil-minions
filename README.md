@@ -19,3 +19,13 @@ Ongoing development, functionality is less than minimal at this point (can get a
 vim evil-minions.py # hack opts
 ./evil-minions.py
 ```
+
+### Hacking
+
+The concept behind `evil-minions` is to simulate minions at the transport level (currently zeromq only). Base transport classes from Salt are used in order not to re-implement object serialization, encryption, authentication and network communication. Other than that, all else is faked.
+
+You might want to get a trace of zeromq events from a real minion in order to hack on `evil-minions`, and you can do that with the `tracing-salt-minion` helper script - it will start `salt-minion` while monkey patching transport classes so that a `/tmp/minion-trace.txt` file. This currently does not work on Windows. Usage:
+
+```
+./tracing-salt-minion
+```
