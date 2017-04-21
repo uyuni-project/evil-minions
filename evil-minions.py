@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-import salt.log
-import salt.transport.client
-
+import logging
 import tornado.gen
 import zmq
 import zmq.eventloop.ioloop
-import logging
+
+import salt.log
+import salt.transport.client
 
 from reactor import Reactor
 
