@@ -20,7 +20,7 @@ def connect_master():
     yield pub_channel.connect()
     req_channel = salt.transport.client.AsyncReqChannel.factory(opts, **factory_kwargs)
 
-    r = reactor.Reactor(minion_id, tok, req_channel)
+    r = reactor.Reactor(tok, req_channel, opts)
     pub_channel.on_recv(lambda load: r.dispatch(load))
 
     yield minion_events.start(minion_id, tok, req_channel)
