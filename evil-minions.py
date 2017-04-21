@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import hashlib
 import logging
 import tornado.gen
 import zmq
@@ -28,8 +29,15 @@ salt.log.setup_console_logger(log_level='debug')
 log = logging.getLogger(__name__)
 
 opts = {
-    'id': 'min.tf.local',
-    'pki_dir': '/etc/salt/pki/minion',
+    'id': 'mino.tf.local',
+    'pki_dir': '/tmp/mino',
+    'machine_id': hashlib.md5('min-1.tf.local').hexdigest(),
+
+    # uncomment below to substitute an existing real minion
+    #'id': 'min-1.tf.local',
+    #'machine_id': 'c403e35bcefe9245b077455bc47ad3ac' # cat /etc/machine-id
+    #'pki_dir': '/etc/salt/pki/minion',
+
     'master': 'suma31pg.tf.local',
     'master_ip': 'suma31pg.tf.local',
     'master_uri': 'tcp://suma31pg.tf.local:4506',
