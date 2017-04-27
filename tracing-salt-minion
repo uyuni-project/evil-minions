@@ -13,8 +13,8 @@ from salt.transport.zeromq import AsyncZeroMQReqChannel
 from salt.transport.zeromq import AsyncZeroMQPubChannel
 
 class Dumper(object):
-    def __init__(self):
-        self.dump_file = open('/tmp/minion-trace.yml', 'w+')
+    def __init__(self, trace_path):
+        self.dump_file = open(trace_path, 'w+')
 
     def dump(self, load, socket):
         header = {
@@ -50,7 +50,7 @@ class Dumper(object):
             callback(load)
         return self.on_recv_original(logging_callback)
 
-d = Dumper()
+d = Dumper('/tmp/minion-trace.yml')
 d.install()
 
 execfile(distutils.spawn.find_executable('salt-minion'))
