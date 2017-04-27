@@ -3,7 +3,7 @@
 This script is used to kick off a salt minion daemon
 '''
 
-import pprint
+import yaml
 import time
 
 import tornado.gen
@@ -13,36 +13,50 @@ from salt.scripts import salt_minion
 from salt.transport.zeromq import AsyncZeroMQReqChannel
 from salt.transport.zeromq import AsyncZeroMQPubChannel
 
-current_milli_time = lambda: int(round(time.time() * 1000))
+class Dumper(object):
+    def __init__(self):
+        self.dump_file = open('/tmp/minion-trace.yml', 'w+')
 
-with open('/tmp/minion-trace.txt', 'w+') as log_file:
-    pp = pprint.PrettyPrinter(indent=4, stream=log_file)
-    last_pub_time = current_milli_time()
+    def dump(self, load, socket):
+        header = {
+            'socket' : socket,
+            'time' : time.time(),
+        }
+        event = {
+            'header' : header,
+            'load' : load,
+        }
+        self.dump_file.write("---\n")
+        self.dump_file.write(yaml.safe_dump(event, default_flow_style=False))
+        self.dump_file.flush()
 
-    @tornado.gen.coroutine
-    def logging_send(self, load, **kwargs):
-        log_file.write("Time since last publication:\n")
-        log_file.write("%d\n" % (current_milli_time() - last_pub_time))
-        log_file.write("Request to master:\n")
-        pp.pprint(load)
-        log_file.flush()
-        ret = yield self.send_original(load, **kwargs)
-        raise tornado.gen.Return(ret)
+# init dumper
 
-    def logging_on_recv(self, callback):
-        def logging_callback(load):
-            global last_pub_time
-            last_pub_time = current_milli_time()
-            log_file.write("Publication from master:\n")
-            pp.pprint(load)
-            log_file.flush()
-            callback(load)
-        return self.on_recv_original(logging_callback)
+d = Dumper()
 
-    AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
-    AsyncZeroMQReqChannel.send = logging_send
+# define send/receive methods that dump in addition to their original functionality
 
-    AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
-    AsyncZeroMQPubChannel.on_recv = logging_on_recv
+@tornado.gen.coroutine
+def logging_send(self, load, **kwargs):
+    d.dump(load, 'REQ')
+    ret = yield self.send_original(load, **kwargs)
+    d.dump(ret, 'REP')
+    raise tornado.gen.Return(ret)
 
-    salt_minion()
+def logging_on_recv(self, callback):
+    def logging_callback(load):
+        d.dump(load, 'PUB')
+        callback(load)
+    return self.on_recv_original(logging_callback)
+
+# monkey patch
+
+AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
+AsyncZeroMQReqChannel.send = logging_send
+
+AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
+AsyncZeroMQPubChannel.on_recv = logging_on_recv
+
+# start minion
+
+salt_minion()
