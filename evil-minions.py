@@ -20,8 +20,9 @@ def connect_master():
     yield pub_channel.connect()
     req_channel = salt.transport.client.AsyncReqChannel.factory(opts, **factory_kwargs)
 
-    r = reactor.Reactor(tok, req_channel, opts)
+    r = reactor.Reactor(tok, req_channel, 'minion-trace.yml', opts)
     pub_channel.on_recv(lambda load: r.dispatch(load))
+    yield r.start()
 
     yield minion_events.start(minion_id, tok, req_channel)
 
@@ -29,14 +30,14 @@ salt.log.setup_console_logger(log_level='debug')
 log = logging.getLogger(__name__)
 
 opts = {
-    'id': 'mino.tf.local',
-    'pki_dir': '/tmp/mino',
-    'machine_id': hashlib.md5('min-1.tf.local').hexdigest(),
+    'id': 'evil-minion.tf.local',
+    'pki_dir': '/tmp/evil-minion',
+    'machine_id': hashlib.md5('evil-minion.tf.local').hexdigest(),
 
     # uncomment below to substitute an existing real minion
-    #'id': 'min-1.tf.local',
-    #'machine_id': 'c403e35bcefe9245b077455bc47ad3ac' # cat /etc/machine-id
-    #'pki_dir': '/etc/salt/pki/minion',
+    # 'id': 'min-1.tf.local',
+    # 'machine_id': 'c403e35bcefe9245b077455bc47ad3ac', # cat /etc/machine-id
+    # 'pki_dir': '/etc/salt/pki/minion',
 
     'master': 'suma31pg.tf.local',
     'master_ip': 'suma31pg.tf.local',
