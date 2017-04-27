@@ -1,56 +1,14 @@
 #!/usr/bin/env python
 '''
-This script is used to kick off a salt minion daemon
+Script to kick off salt-minion with a ZeroMQ Dumper attached.
+The Dumper monkey-patches Salt core I/O classes to dump exchanged messages to a Yaml file.
 '''
 
 import distutils.spawn
-import yaml
-import time
 
-import tornado.gen
+import dumper
 
-from salt.transport.zeromq import AsyncZeroMQReqChannel
-from salt.transport.zeromq import AsyncZeroMQPubChannel
-
-class Dumper(object):
-    def __init__(self, trace_path):
-        self.dump_file = open(trace_path, 'w+')
-
-    def dump(self, load, socket):
-        header = {
-            'socket' : socket,
-            'time' : time.time(),
-        }
-        event = {
-            'header' : header,
-            'load' : load,
-        }
-        self.dump_file.write("---\n")
-        self.dump_file.write(yaml.safe_dump(event, default_flow_style=False))
-        self.dump_file.flush()
-
-    def install(self):
-        AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
-        AsyncZeroMQReqChannel.send = Dumper.logging_send
-        AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
-        AsyncZeroMQPubChannel.on_recv = Dumper.logging_on_recv
-
-    @staticmethod
-    @tornado.gen.coroutine
-    def logging_send(self, load, **kwargs):
-        d.dump(load, 'REQ')
-        ret = yield self.send_original(load, **kwargs)
-        d.dump(ret, 'REP')
-        raise tornado.gen.Return(ret)
-
-    @staticmethod
-    def logging_on_recv(self, callback):
-        def logging_callback(load):
-            d.dump(load, 'PUB')
-            callback(load)
-        return self.on_recv_original(logging_callback)
-
-d = Dumper('/tmp/minion-trace.yml')
+d = dumper.Dumper('/tmp/minion-trace.yml')
 d.install()
 
 execfile(distutils.spawn.find_executable('salt-minion'))
