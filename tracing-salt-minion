@@ -29,33 +29,28 @@ class Dumper(object):
         self.dump_file.write(yaml.safe_dump(event, default_flow_style=False))
         self.dump_file.flush()
 
-# init dumper
+    def install(self):
+        AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
+        AsyncZeroMQReqChannel.send = Dumper.logging_send
+        AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
+        AsyncZeroMQPubChannel.on_recv = Dumper.logging_on_recv
+
+    @staticmethod
+    @tornado.gen.coroutine
+    def logging_send(self, load, **kwargs):
+        d.dump(load, 'REQ')
+        ret = yield self.send_original(load, **kwargs)
+        d.dump(ret, 'REP')
+        raise tornado.gen.Return(ret)
+
+    @staticmethod
+    def logging_on_recv(self, callback):
+        def logging_callback(load):
+            d.dump(load, 'PUB')
+            callback(load)
+        return self.on_recv_original(logging_callback)
 
 d = Dumper()
-
-# define send/receive methods that dump in addition to their original functionality
-
-@tornado.gen.coroutine
-def logging_send(self, load, **kwargs):
-    d.dump(load, 'REQ')
-    ret = yield self.send_original(load, **kwargs)
-    d.dump(ret, 'REP')
-    raise tornado.gen.Return(ret)
-
-def logging_on_recv(self, callback):
-    def logging_callback(load):
-        d.dump(load, 'PUB')
-        callback(load)
-    return self.on_recv_original(logging_callback)
-
-# monkey patch
-
-AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
-AsyncZeroMQReqChannel.send = logging_send
-
-AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
-AsyncZeroMQPubChannel.on_recv = logging_on_recv
-
-# start minion
+d.install()
 
 execfile(distutils.spawn.find_executable('salt-minion'))
