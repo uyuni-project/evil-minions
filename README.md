@@ -6,26 +6,31 @@
 
 ### Status
 
-Ongoing development, functionality is less than minimal at this point (can get a key accepted and respond to `test.ping` on a single minion).
+Ongoing development, minimal functionality is there.
 
 ### Installation
 
  - install salt-minion 2015.8.12
  - clone this git repository
 
-### Usage
+### Ideas and Usage
+
+This project contains a script, `tracing-salt-minion`, that wraps `salt-minion` while adding ZeroMQ dumping functionality. While running, it will produce a `minion-trace.yml` file which contains a trace of all objects that have been exchanged between master and minion.
+
+```
+./tracing-salt-minion
+less /tmp/minion-trace.yml
+```
+
+This "dump" can be fed to the `evil-minions.py` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will optionally use a different minion id and machine id, so that it will look as a completely different minion to the master.
 
 ```
 vim evil-minions.py # hack opts
 ./evil-minions.py
 ```
 
-### Hacking
-
-The concept behind `evil-minions` is to simulate minions at the transport level (currently zeromq only). Base transport classes from Salt are used in order not to re-implement object serialization, encryption, authentication and network communication. Other than that, all else is faked.
-
-You might want to get a trace of zeromq events from a real minion in order to hack on `evil-minions`, and you can do that with the `tracing-salt-minion` helper script - it will start `salt-minion` while monkey patching transport classes so that a `/tmp/minion-trace.txt` file. This currently does not work on Windows. Usage:
-
-```
-./tracing-salt-minion
-```
+### Known limitations
+ - only the ZeroMQ transport is supported
+ - `mine` events are not really reproduced
+ - delays between responses are not reproduced
+ - `state.sls`'s `concurrent` option does not really work
