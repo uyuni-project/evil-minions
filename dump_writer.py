@@ -6,7 +6,7 @@ import tornado.gen
 from salt.transport.zeromq import AsyncZeroMQReqChannel
 from salt.transport.zeromq import AsyncZeroMQPubChannel
 
-class Dumper(object):
+class DumpWriter(object):
     '''Monkey-patches ZeroMQ core I/O classes to dump exchanged messages to a Yaml file.'''
     def __init__(self, trace_path):
         self.dump_file = open(trace_path, 'w+')
