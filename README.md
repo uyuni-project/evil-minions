@@ -15,11 +15,11 @@ Ongoing development, minimal functionality is there.
 
 ### Ideas and Usage
 
-This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `minion-trace.yml` file.
+This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `/tmp/minion-dump.yml` file.
 
 ```
 ./dumping-salt-minion
-less /tmp/minion-trace.yml
+less /tmp/minion-dump.yml
 ```
 
 This "dump" can be fed to the `evil-minions.py` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will optionally use a different minion id and machine id, so that it will look as a completely different minion to the master.
