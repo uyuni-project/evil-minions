@@ -1,7 +1,6 @@
 import tornado.gen
 import logging
 
-from dump import Dump
 from playbook import Playbook
 
 log = logging.getLogger(__name__)
@@ -14,8 +13,7 @@ class Reactor(object):
         self.machine_id = opts['machine_id']
         self.master = opts['master']
 
-        dump = Dump(dump_path)
-        self.playbook = Playbook(dump, {
+        self.playbook = Playbook(dump_path, {
             'tok': self.tok,
             'id': self.minion_id,
             'machine_id': self.machine_id,
