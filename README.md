@@ -15,10 +15,10 @@ Ongoing development, minimal functionality is there.
 
 ### Ideas and Usage
 
-This project contains a script, `tracing-salt-minion`, that wraps `salt-minion` while adding ZeroMQ dumping functionality. While running, it will produce a `minion-trace.yml` file which contains a trace of all objects that have been exchanged between master and minion.
+This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `minion-trace.yml` file.
 
 ```
-./tracing-salt-minion
+./dumping-salt-minion
 less /tmp/minion-trace.yml
 ```
 
