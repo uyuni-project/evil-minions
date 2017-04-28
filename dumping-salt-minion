@@ -9,6 +9,6 @@ import distutils.spawn
 from dump_writer import DumpWriter
 
 d = DumpWriter('/tmp/minion-dump.yml')
-d.install()
+d.attach()
 
 execfile(distutils.spawn.find_executable('salt-minion'))
