@@ -1,7 +1,7 @@
 import tornado.gen
 import logging
 
-from playbook import Playbook
+from dump_reader import DumpReader
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class Reactor(object):
         self.machine_id = opts['machine_id']
         self.master = opts['master']
 
-        self.playbook = Playbook(dump_path, {
+        self.dump_reader = DumpReader(dump_path, {
             'tok': self.tok,
             'id': self.minion_id,
             'machine_id': self.machine_id,
@@ -35,7 +35,7 @@ class Reactor(object):
             log.debug("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
-        reactions = self.playbook.reactions_to(load)
+        reactions = self.dump_reader.reactions_to(load)
         if reactions:
             ret = yield self.react(load, reactions)
         else:

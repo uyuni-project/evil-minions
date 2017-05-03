@@ -43,7 +43,7 @@ class Dump(object):
 
         return dump
 
-class Playbook(object):
+class DumpReader(object):
     def __init__(self, dump_path, replacements):
         self.reactions = {}
 
@@ -85,5 +85,5 @@ class Playbook(object):
         call_id = self._fun_call_id(load['fun'], load['arg'] or [])
         result = self.reactions.get(call_id) or []
         if not result:
-            log.error("No playbook entry for function %s with parameters %s" % call_id)
+            log.error("No dump entry corresponding to function %s with parameters %s was found" % call_id)
         return result
