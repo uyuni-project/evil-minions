@@ -6,6 +6,7 @@ from dump_reader import DumpReader
 log = logging.getLogger(__name__)
 
 class Reactor(object):
+    '''Reacts to PUB events by responding with REQs from a dump'''
     def __init__(self, tok, channel, dump_path, opts):
         self.tok = tok
         self.channel = channel
