@@ -15,8 +15,8 @@ def main():
     parser.add_argument('master', help='the master to connect to')
     parser.add_argument('--count', dest='count', type=int, default=10,
                        help='number of evil minions (default: 10)')
-    parser.add_argument('--dump-path', dest='dump_path', default='./minion-dump.yml',
-                       help='path for the dump file (default: ./minion-dump.yml)')
+    parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
+                       help='path for the dump file (default: /tmp/minion-dump.yml)')
     args = parser.parse_args()
 
     # set up logging
