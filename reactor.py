@@ -1,5 +1,8 @@
-import tornado.gen
+'''Classes to implement responses an EvilMinion returns to its master'''
+
 import logging
+
+import tornado.gen
 
 from dump_reader import DumpReader
 
@@ -24,10 +27,12 @@ class Reactor(object):
 
     @tornado.gen.coroutine
     def start(self):
+        '''Dispatches REQs that fire off automatically when the minion starts'''
         self.dispatch({'load': {'fun': None, 'arg': None, 'tgt': self.minion_id, 'load': None, 'jid': None}})
 
     @tornado.gen.coroutine
     def dispatch(self, load):
+        '''Finds appropriate reactions to a PUB message and dispatches them'''
         load = load['load']
         fun = load['fun']
         tgt = load['tgt']
@@ -41,6 +46,7 @@ class Reactor(object):
 
     @tornado.gen.coroutine
     def react(self, load, reactions):
+        '''Dispatches reactions in response to some load'''
         for reaction in reactions:
             request = reaction['load']
             if request['cmd'] == '_return' and request.get('fun') == load.get('fun'):

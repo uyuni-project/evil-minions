@@ -1,3 +1,5 @@
+'''Simulates a minion via a dump file'''
+
 from distutils.dir_util import mkpath
 import hashlib
 
@@ -43,6 +45,7 @@ class EvilMinion(object):
 
     @tornado.gen.coroutine
     def start(self):
+        '''Opens ZeroMQ sockets, starts listening to PUB events and kicks off initial REQs'''
         factory_kwargs = {'timeout': 60, 'safe': True, 'io_loop': self.io_loop}
         pub_channel = salt.transport.client.AsyncPubChannel.factory(self.opts, **factory_kwargs)
         tok = pub_channel.auth.gen_token('salt')
@@ -50,5 +53,5 @@ class EvilMinion(object):
         req_channel = salt.transport.client.AsyncReqChannel.factory(self.opts, **factory_kwargs)
 
         reactor = Reactor(tok, req_channel, self.dump_path, self.opts)
-        pub_channel.on_recv(lambda load: reactor.dispatch(load))
+        pub_channel.on_recv(reactor.dispatch)
         yield reactor.start()

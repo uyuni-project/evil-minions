@@ -8,7 +8,10 @@ import distutils.spawn
 
 from dump_writer import DumpWriter
 
-d = DumpWriter('/tmp/minion-dump.yml')
-d.attach()
+def main():
+    d = DumpWriter('/tmp/minion-dump.yml')
+    d.attach()
+    execfile(distutils.spawn.find_executable('salt-minion'))
 
-execfile(distutils.spawn.find_executable('salt-minion'))
+if __name__ == "__main__":
+    main()

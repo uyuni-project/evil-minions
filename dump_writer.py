@@ -1,5 +1,7 @@
-import yaml
+'''Classes to write dump files'''
+
 import time
+import yaml
 
 import tornado.gen
 
@@ -14,15 +16,15 @@ class DumpWriter(object):
 
     def attach(self):
         '''Monkey-patches ZeroMQ core I/O classes to dump exchanged messages to a Yaml file.'''
-        AsyncZeroMQReqChannel._dump = self._dump
+        AsyncZeroMQReqChannel.dump = self.dump
         AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
         AsyncZeroMQReqChannel.send = _logging_send
 
-        AsyncZeroMQPubChannel._dump = self._dump
+        AsyncZeroMQPubChannel.dump = self.dump
         AsyncZeroMQPubChannel.on_recv_original = AsyncZeroMQPubChannel.on_recv
         AsyncZeroMQPubChannel.on_recv = _logging_on_recv
 
-    def _dump(self, load, socket):
+    def dump(self, load, socket):
         '''Dumps a ZeroMQ message, socket identifies the channel and direction'''
         header = {
             'socket' : socket,
@@ -38,13 +40,15 @@ class DumpWriter(object):
 
 @tornado.gen.coroutine
 def _logging_send(self, load, **kwargs):
-    self._dump(load, 'REQ')
+    '''Sends a REQ ZeroMQ message logging it and the corresponding REP to a dump file'''
+    self.dump(load, 'REQ')
     ret = yield self.send_original(load, **kwargs)
-    self._dump(ret, 'REP')
+    self.dump(ret, 'REP')
     raise tornado.gen.Return(ret)
 
 def _logging_on_recv(self, callback):
+    '''Handles a PUB ZeroMQ message and additionally logs it to a dump file'''
     def _logging_callback(load):
-        self._dump(load, 'PUB')
+        self.dump(load, 'PUB')
         callback(load)
     return self.on_recv_original(_logging_callback)
