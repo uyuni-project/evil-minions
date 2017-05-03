@@ -1,0 +1,29 @@
+#!/usr/bin/python
+
+import argparse
+
+import zmq
+import zmq.eventloop.ioloop
+import salt.log
+
+from evil_minion import EvilMinion
+
+# parse commandline switches
+parser = argparse.ArgumentParser(description='Simulates a minion given a dump file.')
+parser.add_argument('master', help='the master to connect to')
+parser.add_argument('minion_id', help='the simulated minion id')
+parser.add_argument('--dump-path', dest='dump_path', default='./minion-dump.yml',
+                   help='path for the dump file (default: ./minion-dump.yml)')
+args = parser.parse_args()
+
+# set up logging
+salt.log.setup_console_logger(log_level='debug')
+
+# set up the IO loop
+zmq.eventloop.ioloop.install()
+io_loop = zmq.eventloop.ioloop.ZMQIOLoop.current()
+
+# start the evil!
+evil_minion = EvilMinion(args.master, args.minion_id, args.dump_path, io_loop)
+io_loop.spawn_callback(lambda: evil_minion.start())
+io_loop.start()
