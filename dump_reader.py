@@ -4,6 +4,7 @@ import yaml
 log = logging.getLogger(__name__)
 
 class DumpReader(object):
+    '''Reads a dump file and parses it into a "request id to response" dictionary'''
     def __init__(self, path, replacements):
         with open(path, 'r') as f:
             raw_dump = list(yaml.safe_load_all(f.read()))
@@ -16,6 +17,7 @@ class DumpReader(object):
             self.reactions = _compute_reactions(dump)
 
     def get_reactions_to(self, load):
+        '''Returns reactions to a certain PUB load, looking up the same function signature in the dump data'''
         call_id = _fun_call_id(load['fun'], load['arg'] or [])
         result = self.reactions.get(call_id) or []
         if not result:
@@ -23,6 +25,7 @@ class DumpReader(object):
         return result
 
 def _compute_reactions(dump):
+    '''Computes a function id to reactions dictionary by re-playing event history from the dump'''
     result = {}
 
     current_reactions = []
@@ -49,12 +52,13 @@ def _fun_call_id(fun, args=[]):
     return (fun, _immutable(clean_args))
 
 def _zap_kwarg(arg):
+    '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys recursively removed'''
     if type(arg) is dict:
         return {k: v for k, v in arg.items() if k != '__kwarg__'}
     return arg
 
 def _immutable(data):
-    '''Returns an immutable version of any combination of dict, list and hashable types'''
+    '''Returns an immutable version of a list/dict stucture'''
     if type(data) is dict:
         return tuple((k, _immutable(v)) for k,v in data.items())
     if type(data) is list:
@@ -62,6 +66,7 @@ def _immutable(data):
     return data
 
 def _find_in_dump(key, dump):
+    '''Returns a key from a list/dict stucture'''
     if type(dump) is dict:
         if dump.has_key(key):
             return dump[key]
@@ -76,6 +81,7 @@ def _find_in_dump(key, dump):
                 return found
 
 def _replace_in_dump(replacements, dump):
+    '''Replaces all occurences of keys in replacements with corresponding values in a list/dict structure, recursively'''
     if type(dump) is list:
         return [_replace_in_dump(replacements, e) for e in dump]
 
