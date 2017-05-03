@@ -19,14 +19,13 @@ This project contains a script, `dumping-salt-minion`, that runs `salt-minion` w
 
 ```
 ./dumping-salt-minion
-less /tmp/minion-dump.yml
+# will create /tmp/minion-dump.yml
 ```
 
-This "dump" can be fed to the `evil-minions.py` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will optionally use a different minion id and machine id, so that it will look as a completely different minion to the master.
+This "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minions, the count can be changed via a commandline switch:
 
 ```
-vim evil-minions.py # hack opts
-./evil-minions.py
+./evil-minions --count 5 <MASTER_FQDN>
 ```
 
 ### Known limitations
