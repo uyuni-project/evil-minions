@@ -38,7 +38,7 @@ class Reactor(object):
         tgt = load['tgt']
 
         if tgt != '*' and self.minion_id not in tgt:
-            log.debug("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
+            log.trace("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
         reactions = self.dump_reader.get_reactions_to(load)
