@@ -13,7 +13,8 @@ def main():
     # parse commandline switches
     parser = argparse.ArgumentParser(description='Simulates a minion given a dump file.')
     parser.add_argument('master', help='the master to connect to')
-    parser.add_argument('minion_id', help='the simulated minion id')
+    parser.add_argument('--count', dest='count', type=int, default=10,
+                       help='number of evil minions (default: 10)')
     parser.add_argument('--dump-path', dest='dump_path', default='./minion-dump.yml',
                        help='path for the dump file (default: ./minion-dump.yml)')
     args = parser.parse_args()
@@ -26,8 +27,9 @@ def main():
     io_loop = zmq.eventloop.ioloop.ZMQIOLoop.current()
 
     # start the evil!
-    evil_minion = EvilMinion(args.master, args.minion_id, args.dump_path, io_loop)
-    io_loop.spawn_callback(evil_minion.start)
+    for i in range(args.count):
+        evil_minion = EvilMinion(args.master, 'evil-%d' % i, args.dump_path, io_loop)
+        io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 
 if __name__ == "__main__":
