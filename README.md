@@ -34,3 +34,4 @@ vim evil-minions.py # hack opts
  - `mine` events are not really reproduced
  - delays between responses are not reproduced
  - `state.sls`'s `concurrent` option does not really work
+ - only `*` and exact minion id targeting are supported at the moment
