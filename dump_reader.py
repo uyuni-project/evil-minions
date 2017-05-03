@@ -81,7 +81,7 @@ class DumpReader(object):
             return tuple(self._immutable(e) for e in data)
         return data
 
-    def reactions_to(self, load):
+    def get_reactions_to(self, load):
         call_id = self._fun_call_id(load['fun'], load['arg'] or [])
         result = self.reactions.get(call_id) or []
         if not result:

@@ -35,7 +35,7 @@ class Reactor(object):
             log.debug("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
-        reactions = self.dump_reader.reactions_to(load)
+        reactions = self.dump_reader.get_reactions_to(load)
         if reactions:
             ret = yield self.react(load, reactions)
         else:
