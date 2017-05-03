@@ -36,10 +36,7 @@ class Reactor(object):
             return
 
         reactions = self.dump_reader.get_reactions_to(load)
-        if reactions:
-            ret = yield self.react(load, reactions)
-        else:
-            log.error("Could not find dispatcher for %s", fun)
+        ret = yield self.react(load, reactions)
 
     @tornado.gen.coroutine
     def react(self, load, reactions):
