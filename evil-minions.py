@@ -10,7 +10,6 @@ import salt.log
 import salt.transport.client
 
 import reactor
-import minion_events
 
 @tornado.gen.coroutine
 def connect_master():
@@ -23,8 +22,6 @@ def connect_master():
     r = reactor.Reactor(tok, req_channel, 'minion-dump.yml', opts)
     pub_channel.on_recv(lambda load: r.dispatch(load))
     yield r.start()
-
-    yield minion_events.start(minion_id, tok, req_channel)
 
 salt.log.setup_console_logger(log_level='debug')
 log = logging.getLogger(__name__)
