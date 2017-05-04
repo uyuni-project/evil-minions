@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 class DumpReader(object):
     '''Reads a dump file and parses it into a "request id to response" dictionary'''
     def __init__(self, path, replacements):
+        self.current_time = 0
         with open(path, 'r') as dump_file:
             raw_dump = list(yaml.safe_load_all(dump_file.read()))
 
@@ -21,13 +22,27 @@ class DumpReader(object):
     def get_reactions_to(self, load):
         '''Returns reactions to a certain PUB load, looking up the same function signature in the dump data'''
         call_id = _fun_call_id(load['fun'], load['arg'] or [])
-        result = self.reactions.get(call_id) or []
-        if not result:
+        reaction_sets = self.reactions.get(call_id) or []
+        if not reaction_sets:
             log.error("No dump entry corresponding to function %s with parameters %s was found", call_id[0], call_id[1])
-        return result
+            return []
+
+        # if multiple reactions were produced in different points in time, use the first one
+        # after the last known timestamp that was already processed
+        future_reaction_sets = filter(lambda s: s[0]['header']['time'] >= self.current_time, reaction_sets)
+        reactions = (future_reaction_sets or [reaction_sets[-1]])[0]
+
+        # if that cannot be found, use the latest one
+        self.current_time = reactions[-1]['header']['time']
+
+        return reactions
 
 def _compute_reactions(dump):
-    '''Computes a function id to reactions dictionary by re-playing event history from the dump'''
+    '''
+    Computes a dictionary from a "function call identifier" to reaction lists (sequences of events that followed that call from the dump).
+    Note that the dump might contain multiple calls to the same function with identical arguments that resulted in different reactions over time!
+    For this reason the function returns a time-ordered list of lists of events.
+    '''
     result = {}
 
     current_reactions = []
@@ -35,7 +50,7 @@ def _compute_reactions(dump):
         load = event['load']
         socket = event['header']['socket']
         if socket == 'PUB' and result == {}:
-            result[_fun_call_id(None, None)] = current_reactions
+            result[_fun_call_id(None, None)] = [current_reactions]
             current_reactions = []
         if socket == 'REQ':
             if load['cmd'] == '_auth':
@@ -43,7 +58,7 @@ def _compute_reactions(dump):
             current_reactions.append(event)
             if load['cmd'] == '_return':
                 call_id = _fun_call_id(load['fun'], load['fun_args'])
-                result[call_id] = current_reactions
+                result[call_id] = (result.get(call_id) or []) + [current_reactions]
                 current_reactions = []
 
     return result
