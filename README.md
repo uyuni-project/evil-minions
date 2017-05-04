@@ -22,10 +22,22 @@ This project contains a script, `dumping-salt-minion`, that runs `salt-minion` w
 # will create /tmp/minion-dump.yml
 ```
 
-This "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minions, the count can be changed via a commandline switch:
+This "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
 
 ```
 ./evil-minions --count 5 <MASTER_FQDN>
+```
+
+By default `evil-minions` will spawn a number of worker processes equal to the number of available CPUs, and split the specified number of minions as evenly as possible among them. This allows to simulate a relatively high number of minions, and can be tweaked with the `--processes` switch:
+
+```
+./evil-minions --count 20 --processes 2 <MASTER_FQDN>
+```
+
+By default `evil-minions` will wait for about 5 seconds between minion starts, in order not to incur in excessive delays in the key-exchange phase which is particularly CPU intensive. If you want to reduce that delay in order to utilize your CPUs better, you can use the `--ramp-up-delay` switch:
+
+```
+./evil-minions --count 100 --ramp-up-delay 2 <MASTER_FQDN>
 ```
 
 ### Known limitations
