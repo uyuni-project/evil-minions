@@ -41,7 +41,7 @@ class EvilMinion(object):
             'open_mode': False,
             'verify_master_pubkey_sign': False,
             'always_verify_signature': False,
-            'keysize': 2048,
+            'keysize': 1024,
         }
 
     @tornado.gen.coroutine
