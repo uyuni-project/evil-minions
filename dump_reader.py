@@ -77,7 +77,7 @@ def _zap_kwarg(arg):
 def _immutable(data):
     '''Returns an immutable version of a list/dict stucture'''
     if isinstance(data, dict):
-        return tuple((k, _immutable(v)) for k, v in data.items())
+        return tuple((k, _immutable(v)) for k, v in sorted(data.items()))
     if isinstance(data, list):
         return tuple(_immutable(e) for e in data)
     return data
