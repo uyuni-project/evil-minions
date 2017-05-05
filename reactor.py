@@ -15,12 +15,14 @@ class Reactor(object):
         self.channel = channel
         self.minion_id = opts['id']
         self.machine_id = opts['machine_id']
+        self.uuid = opts['uuid']
         self.master = opts['master']
 
         self.dump_reader = DumpReader(dump_path, {
             'tok': self.tok,
             'id': self.minion_id,
             'machine_id': self.machine_id,
+            'uuid': self.uuid,
             'master': self.master,
             'master_ip': self.master,
         })

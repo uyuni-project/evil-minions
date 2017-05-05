@@ -2,6 +2,7 @@
 
 from distutils.dir_util import mkpath
 import hashlib
+from uuid import UUID, uuid5
 
 import tornado.gen
 import salt.transport.client
@@ -22,6 +23,7 @@ class EvilMinion(object):
             'id': minion_id,
             'pki_dir': pki_dir,
             'machine_id': hashlib.md5(minion_id).hexdigest(),
+            'uuid': str(uuid5(UUID('d77ed710-0deb-47d9-b053-f2fa2ef78106'), minion_id)),
 
             'master': master,
             'master_ip': master,
