@@ -28,11 +28,9 @@ This "dump" can be fed to the `evil-minions` script, which will mimic the origin
 ./evil-minions --count 5 <MASTER_FQDN>
 ```
 
-By default `evil-minions` will spawn a number of worker processes equal to the number of available CPUs, and split the specified number of minions as evenly as possible among them. This allows to simulate a relatively high number of minions, and can be tweaked with the `--processes` switch:
-
-```
-./evil-minions --count 20 --processes 2 <MASTER_FQDN>
-```
+Simulating minions is not very resource intensive, as one minion will typically consume:
+ - ~2 MB of main memory
+ - ~0.1% of a modern x86_64 core (circa 2016)
 
 ### Known limitations
  - only the ZeroMQ transport is supported
