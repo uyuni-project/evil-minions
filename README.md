@@ -42,7 +42,6 @@ By default `evil-minions` will wait for about 5 seconds between minion starts, i
 
 ### Known limitations
  - only the ZeroMQ transport is supported
- - `mine` events are not really reproduced
- - delays between responses are not reproduced
- - `state.sls`'s `concurrent` option does not really work
  - only `*` and exact minion id targeting are supported at the moment
+ - delays between responses are not reproduced
+ - some Salt features are not faithfully reproduced: `mine` events, `beacon` events, `saltutil.find_job` and `state.sls`'s `concurrent` option
