@@ -4,21 +4,22 @@ import logging
 
 import tornado.gen
 
-from dump_reader import DumpReader
-
 log = logging.getLogger(__name__)
 
 class Reactor(object):
     '''Reacts to PUB events by responding with REQs from a dump'''
-    def __init__(self, tok, channel, dump_path, opts):
+    def __init__(self, tok, channel, dump_reader, opts):
         self.tok = tok
         self.channel = channel
+        self.dump_reader = dump_reader
+
         self.minion_id = opts['id']
         self.machine_id = opts['machine_id']
         self.uuid = opts['uuid']
         self.master = opts['master']
 
-        self.dump_reader = DumpReader(dump_path, {
+        self.current_time = 0
+        self.replacements = dump_reader.get_replacements({
             'tok': self.tok,
             'id': self.minion_id,
             'machine_id': self.machine_id,
@@ -43,7 +44,10 @@ class Reactor(object):
             log.trace("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
-        reactions = self.dump_reader.get_reactions_to(load)
+        reactions = self.dump_reader.get_reactions(load, self.current_time, self.replacements)
+        if reactions:
+            self.current_time = reactions[-1]['header']['time']
+
         ret = yield self.react(load, reactions)
 
     @tornado.gen.coroutine

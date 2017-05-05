@@ -11,9 +11,9 @@ from reactor import Reactor
 
 class EvilMinion(object):
     '''Simulates a minion replaying responses from a dump file'''
-    def __init__(self, master, minion_id, dump_path, io_loop, ramp_up_delay):
+    def __init__(self, master, minion_id, dump_reader, io_loop, ramp_up_delay):
         self.io_loop = io_loop
-        self.dump_path = dump_path
+        self.dump_reader = dump_reader
         self.ramp_up_delay = ramp_up_delay
 
         pki_dir = '/tmp/%s' % minion_id
@@ -57,6 +57,6 @@ class EvilMinion(object):
         yield pub_channel.connect()
         req_channel = salt.transport.client.AsyncReqChannel.factory(self.opts, **factory_kwargs)
 
-        reactor = Reactor(tok, req_channel, self.dump_path, self.opts)
+        reactor = Reactor(tok, req_channel, self.dump_reader, self.opts)
         pub_channel.on_recv(reactor.dispatch)
         yield reactor.start()
