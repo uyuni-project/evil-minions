@@ -34,12 +34,6 @@ By default `evil-minions` will spawn a number of worker processes equal to the n
 ./evil-minions --count 20 --processes 2 <MASTER_FQDN>
 ```
 
-By default `evil-minions` will wait for about 5 seconds between minion starts, in order not to incur in excessive delays in the key-exchange phase which is particularly CPU intensive. If you want to reduce that delay in order to utilize your CPUs better, you can use the `--ramp-up-delay` switch:
-
-```
-./evil-minions --count 100 --ramp-up-delay 2 <MASTER_FQDN>
-```
-
 ### Known limitations
  - only the ZeroMQ transport is supported
  - only `*` and exact minion id targeting are supported at the moment

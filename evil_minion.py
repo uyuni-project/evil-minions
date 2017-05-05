@@ -11,10 +11,9 @@ from reactor import Reactor
 
 class EvilMinion(object):
     '''Simulates a minion replaying responses from a dump file'''
-    def __init__(self, master, minion_id, dump_reader, io_loop, ramp_up_delay):
+    def __init__(self, master, minion_id, dump_reader, io_loop):
         self.io_loop = io_loop
         self.dump_reader = dump_reader
-        self.ramp_up_delay = ramp_up_delay
 
         pki_dir = '/tmp/%s' % minion_id
         mkpath(pki_dir)
@@ -49,8 +48,6 @@ class EvilMinion(object):
     @tornado.gen.coroutine
     def start(self):
         '''Opens ZeroMQ sockets, starts listening to PUB events and kicks off initial REQs'''
-        yield tornado.gen.sleep(self.ramp_up_delay)
-
         factory_kwargs = {'timeout': 60, 'safe': True, 'io_loop': self.io_loop}
         pub_channel = salt.transport.client.AsyncPubChannel.factory(self.opts, **factory_kwargs)
         tok = pub_channel.auth.gen_token('salt')

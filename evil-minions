@@ -22,8 +22,6 @@ def main():
                        help='number of evil minions (default: 10)')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
-    parser.add_argument('--ramp-up-delay', dest='ramp_up_delay', type=int, default=5,
-                       help='delay between minion starts in seconds (default: 5)')
     parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
                        help='path for the dump file (default: /tmp/minion-dump.yml)')
     args = parser.parse_args()
@@ -49,7 +47,7 @@ def process_main(args, indexes, dump_reader):
 
     # start the evil!
     for process_index, overall_index in enumerate(indexes):
-        evil_minion = EvilMinion(args.master, 'evil-%d' % overall_index, dump_reader, io_loop, args.ramp_up_delay * process_index)
+        evil_minion = EvilMinion(args.master, 'evil-%d' % overall_index, dump_reader, io_loop)
         io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 
