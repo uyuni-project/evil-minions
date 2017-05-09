@@ -41,7 +41,7 @@ def _read_dump(path):
 
         result = {}
         current_reactions = []
-        for event in dump:
+        for event in sorted(dump, key=lambda d: d['header']['time']):
             load = event['load']
             socket = event['header']['socket']
             if socket == 'PUB' and result == {}:
