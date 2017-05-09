@@ -41,9 +41,12 @@ def _read_dump(path):
 
         result = {}
         current_reactions = []
+        last_time = None
         for event in sorted(dump, key=lambda d: d['header']['time']):
             load = event['load']
             socket = event['header']['socket']
+            current_time = event['header']['time']
+            last_time = last_time or current_time
             if socket == 'PUB' and result == {}:
                 result[_fun_call_id(None, None)] = [current_reactions]
                 current_reactions = []
@@ -55,6 +58,9 @@ def _read_dump(path):
                     call_id = _fun_call_id(load['fun'], load['fun_args'])
                     result[call_id] = (result.get(call_id) or []) + [current_reactions]
                     current_reactions = []
+
+            event['header']['duration'] = current_time - last_time
+            last_time = current_time
 
         return result
 

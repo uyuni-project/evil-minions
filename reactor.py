@@ -59,4 +59,5 @@ class Reactor(object):
                 request['jid'] = load['jid']
                 if load.has_key('metadata'):
                     request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
+            yield tornado.gen.sleep(reaction['header']['duration'])
             yield self.channel.send(request, timeout=60)
