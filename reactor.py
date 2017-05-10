@@ -54,6 +54,8 @@ class Reactor(object):
             yield self.react(load, reactions)
         elif fun == 'saltutil.find_job':
             yield self.react_to_find_job(load)
+        elif fun == 'saltutil.running':
+            yield self.react_to_running(load)
         else:
             log.error("No dump entry corresponding to function %s with parameters %s was found", fun, arg)
 
@@ -71,6 +73,21 @@ class Reactor(object):
             'jid': load['jid'],
             'retcode': 0,
             'return': ret,
+            'success': True,
+        }
+        ret = yield self.channel.send(request, timeout=60)
+
+    @tornado.gen.coroutine
+    def react_to_running(self, load):
+        '''Dispatches a reaction to a running call'''
+        request = {
+            'cmd': '_return',
+            'fun': load['fun'],
+            'fun_args': load['arg'],
+            'id': self.minion_id,
+            'jid': load['jid'],
+            'retcode': 0,
+            'return': self.current_jobs,
             'success': True,
         }
         ret = yield self.channel.send(request, timeout=60)
