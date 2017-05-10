@@ -28,6 +28,7 @@ class Reactor(object):
             'master': self.master,
             'master_ip': self.master,
         })
+        self.current_jobs = []
 
     @tornado.gen.coroutine
     def start(self):
@@ -39,6 +40,7 @@ class Reactor(object):
         '''Finds appropriate reactions to a PUB message and dispatches them'''
         load = load['load']
         fun = load['fun']
+        arg = load['arg']
         tgt = load['tgt']
 
         if tgt != '*' and self.minion_id not in tgt:
@@ -46,14 +48,37 @@ class Reactor(object):
             return
 
         reactions = self.dump_reader.get_reactions(load, self.current_time, self.replacements)
+
         if reactions:
             self.current_time = reactions[-1]['header']['time']
+            yield self.react(load, reactions)
+        elif fun == 'saltutil.find_job':
+            yield self.react_to_find_job(load)
+        else:
+            log.error("No dump entry corresponding to function %s with parameters %s was found", fun, arg)
 
-        ret = yield self.react(load, reactions)
+    @tornado.gen.coroutine
+    def react_to_find_job(self, load):
+        '''Dispatches a reaction to a find_job call'''
+        jobs = filter(lambda j: j['jid'] == load['arg'][0], self.current_jobs)
+        ret = dict(jobs[0].items() + {'pid': 1234}.items()) if jobs else {}
+
+        request = {
+            'cmd': '_return',
+            'fun': load['fun'],
+            'fun_args': load['arg'],
+            'id': self.minion_id,
+            'jid': load['jid'],
+            'retcode': 0,
+            'return': ret,
+            'success': True,
+        }
+        ret = yield self.channel.send(request, timeout=60)
 
     @tornado.gen.coroutine
     def react(self, load, reactions):
         '''Dispatches reactions in response to some load'''
+        self.current_jobs.append(load)
         for reaction in reactions:
             request = reaction['load']
             if request['cmd'] == '_return' and request.get('fun') == load.get('fun'):
@@ -61,4 +86,5 @@ class Reactor(object):
                 if load.has_key('metadata'):
                     request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
             yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
-            yield self.channel.send(request, timeout=60)
+            ret = yield self.channel.send(request, timeout=60)
+        self.current_jobs.remove(load)

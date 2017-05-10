@@ -18,7 +18,6 @@ class DumpReader(object):
         call_id = _fun_call_id(load['fun'], load['arg'] or [])
         reaction_sets = self.dump.get(call_id) or []
         if not reaction_sets:
-            log.error("No dump entry corresponding to function %s with parameters %s was found", call_id[0], call_id[1])
             return []
 
         # if multiple reactions were produced in different points in time, use the first one
