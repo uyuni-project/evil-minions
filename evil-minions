@@ -32,12 +32,11 @@ def main():
     salt.log.setup_console_logger(log_level='debug')
 
     # set up processes
-    dump_reader = DumpReader(args.dump_path)
     for chunk in minion_chunks(args.count, args.processes):
-        p = Process(target=process_main, args=(args, chunk, dump_reader))
+        p = Process(target=process_main, args=(args, chunk))
         p.start()
 
-def process_main(args, indexes, dump_reader):
+def process_main(args, indexes):
     '''Per-process entry point'''
     # set up logging
     log = logging.getLogger(__name__)
@@ -46,6 +45,9 @@ def process_main(args, indexes, dump_reader):
     # set up the IO loop
     zmq.eventloop.ioloop.install()
     io_loop = zmq.eventloop.ioloop.ZMQIOLoop.current()
+
+    # set up the dump
+    dump_reader = DumpReader(args.dump_path)
 
     # start the evil!
     for process_index, overall_index in enumerate(indexes):
