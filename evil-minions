@@ -51,7 +51,7 @@ def process_main(args, chunk):
 
     # start the evil!
     for i in chunk:
-        evil_minion = EvilMinion(args.master, 'evil-%d' % i, dump_reader, io_loop, args.slowdown_factor)
+        evil_minion = EvilMinion(args.master, 'evil-%d' % i, args.slowdown_factor, dump_reader, io_loop)
         io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 

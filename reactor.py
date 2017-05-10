@@ -8,11 +8,11 @@ log = logging.getLogger(__name__)
 
 class Reactor(object):
     '''Reacts to PUB events by responding with REQs from a dump'''
-    def __init__(self, tok, channel, dump_reader, slowdown_factor, opts):
+    def __init__(self, tok, channel, slowdown_factor, dump_reader, opts):
         self.tok = tok
         self.channel = channel
-        self.dump_reader = dump_reader
         self.slowdown_factor = slowdown_factor
+        self.dump_reader = dump_reader
 
         self.minion_id = opts['id']
         self.machine_id = opts['machine_id']
