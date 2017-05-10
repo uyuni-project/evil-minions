@@ -29,6 +29,7 @@ This "dump" can be fed to the `evil-minions` script, which will mimic the origin
 ```
 
 Simulating minions is not very resource intensive, as one minion will typically consume:
+ - ~10 open files (use `ulimit -n <10 * COUNT>` to increase the limit prior running `evil-minions`)
  - ~2 MB of main memory
  - ~0.1% of a modern x86_64 core (circa 2016)
 
