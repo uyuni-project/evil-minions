@@ -33,6 +33,18 @@ Simulating minions is not very resource intensive, as one minion will typically 
  - ~2 MB of main memory
  - ~0.1% of a modern x86_64 core (circa 2016)
 
+By default, `evil-minions` will respond as fast as possible, which might not be appropriate depending on the objectives of your simulation. To reproduce delays observed by the original minion from which the dump was taken, use the `--slowdown-factor` switch:
+
+```
+./evil-minions --count 5 --slowdown-factor 1 <MASTER_FQDN>
+```
+
+`--slowdown-factor` can be any positive floating-point value, for example:
+ - `0.0`, the default value, makes `evil-minions` respond as fast as possible
+ - `1.0` makes `evil-minion` introduce delays to match times observed and recorded in `minion-dump.yml`
+ - `2.0` makes `evil-minion` react twice as slow as the times observed and recorded in `minion-dump.yml`
+ - `0.5` makes `evil-minion` react twice as fast as the times observed and recorded in `minion-dump.yml`
+
 ### Known limitations
  - only the ZeroMQ transport is supported
  - only `*` and exact minion id targeting are supported at the moment
