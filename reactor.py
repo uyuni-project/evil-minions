@@ -60,6 +60,20 @@ class Reactor(object):
             log.error("No dump entry corresponding to function %s with parameters %s was found", fun, arg)
 
     @tornado.gen.coroutine
+    def react(self, load, reactions):
+        '''Dispatches reactions in response to typical functions'''
+        self.current_jobs.append(load)
+        for reaction in reactions:
+            request = reaction['load']
+            if request['cmd'] == '_return' and request.get('fun') == load.get('fun'):
+                request['jid'] = load['jid']
+                if load.has_key('metadata'):
+                    request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
+            yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
+            ret = yield self.channel.send(request, timeout=60)
+        self.current_jobs.remove(load)
+
+    @tornado.gen.coroutine
     def react_to_find_job(self, load):
         '''Dispatches a reaction to a find_job call'''
         jobs = filter(lambda j: j['jid'] == load['arg'][0], self.current_jobs)
@@ -91,17 +105,3 @@ class Reactor(object):
             'success': True,
         }
         ret = yield self.channel.send(request, timeout=60)
-
-    @tornado.gen.coroutine
-    def react(self, load, reactions):
-        '''Dispatches reactions in response to some load'''
-        self.current_jobs.append(load)
-        for reaction in reactions:
-            request = reaction['load']
-            if request['cmd'] == '_return' and request.get('fun') == load.get('fun'):
-                request['jid'] = load['jid']
-                if load.has_key('metadata'):
-                    request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
-            yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
-            ret = yield self.channel.send(request, timeout=60)
-        self.current_jobs.remove(load)
