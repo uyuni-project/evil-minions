@@ -20,6 +20,8 @@ def main():
     parser.add_argument('master', help='the master to connect to')
     parser.add_argument('--count', dest='count', type=int, default=10,
                        help='number of evil minions (default: 10)')
+    parser.add_argument('--slowdown-factor', dest='slowdown_factor', type=float, default=0.0,
+                       help='slow down evil minions to behave realistically (default is 0.0 "as fast as possible", 1.0 is "as fast as the original")')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
@@ -47,7 +49,7 @@ def process_main(args, indexes, dump_reader):
 
     # start the evil!
     for process_index, overall_index in enumerate(indexes):
-        evil_minion = EvilMinion(args.master, 'evil-%d' % overall_index, dump_reader, io_loop)
+        evil_minion = EvilMinion(args.master, 'evil-%d' % overall_index, dump_reader, io_loop, args.slowdown_factor)
         io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 
