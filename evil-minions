@@ -36,11 +36,11 @@ def main():
         p = Process(target=process_main, args=(args, chunk))
         p.start()
 
-def process_main(args, indexes):
+def process_main(args, chunk):
     '''Per-process entry point'''
     # set up logging
     log = logging.getLogger(__name__)
-    log.debug("Starting pool: %s" % indexes)
+    log.debug("Starting pool: %s" % chunk)
 
     # set up the IO loop
     zmq.eventloop.ioloop.install()
@@ -50,8 +50,8 @@ def process_main(args, indexes):
     dump_reader = DumpReader(args.dump_path)
 
     # start the evil!
-    for process_index, overall_index in enumerate(indexes):
-        evil_minion = EvilMinion(args.master, 'evil-%d' % overall_index, dump_reader, io_loop, args.slowdown_factor)
+    for i in chunk:
+        evil_minion = EvilMinion(args.master, 'evil-%d' % i, dump_reader, io_loop, args.slowdown_factor)
         io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 
