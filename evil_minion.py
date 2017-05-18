@@ -11,13 +11,21 @@ from reactor import Reactor
 
 class EvilMinion(object):
     '''Simulates a minion replaying responses from a dump file'''
-    def __init__(self, master, minion_id, slowdown_factor, dump_reader, io_loop):
+    def __init__(self, master, minion_id, slowdown_factor, dump_reader, io_loop, keysize=1024):
         self.slowdown_factor = slowdown_factor
         self.dump_reader = dump_reader
         self.io_loop = io_loop
 
         pki_dir = '/tmp/%s' % minion_id
         mkpath(pki_dir)
+
+        cache_dir = os.path.join(pki_dir, 'cache', 'minion')
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+
+        sock_dir = os.path.join(pki_dir, 'sock', 'minion')
+        if not os.path.exists(sock_dir):
+            os.makedirs(sock_dir)
 
         self.opts = {
             'id': minion_id,
@@ -43,7 +51,10 @@ class EvilMinion(object):
             'open_mode': False,
             'verify_master_pubkey_sign': False,
             'always_verify_signature': False,
-            'keysize': 1024,
+            'keysize': keysize,
+            '__role': 'minion',
+            'sock_dir': sock_dir,
+            'cache_dir': cache_dir,
         }
 
     @tornado.gen.coroutine

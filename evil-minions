@@ -24,6 +24,8 @@ def main():
                        help='slow down evil minions to behave realistically (default is 0.0 "as fast as possible", 1.0 is "as fast as the original")')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
+    parser.add_argument('--keysize', dest='keysize', type=int, default=1024,
+                       help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
                        help='path for the dump file (default: /tmp/minion-dump.yml)')
     args = parser.parse_args()
@@ -51,7 +53,12 @@ def process_main(args, chunk):
 
     # start the evil!
     for i in chunk:
-        evil_minion = EvilMinion(args.master, 'evil-%d' % i, args.slowdown_factor, dump_reader, io_loop)
+        evil_minion = EvilMinion(args.master,
+                                 'evil-%d' % i,
+                                 args.slowdown_factor,
+                                 dump_reader,
+                                 io_loop,
+                                 keysize=args.keysize)
         io_loop.spawn_callback(evil_minion.start)
     io_loop.start()
 
