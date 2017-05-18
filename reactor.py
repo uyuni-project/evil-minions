@@ -70,7 +70,7 @@ class Reactor(object):
                 if load.has_key('metadata'):
                     request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
             yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
-            ret = yield self.channel.send(request, timeout=60)
+            yield self.channel.send(request, timeout=60)
         self.current_jobs.remove(load)
 
     @tornado.gen.coroutine
@@ -89,7 +89,7 @@ class Reactor(object):
             'return': ret,
             'success': True,
         }
-        ret = yield self.channel.send(request, timeout=60)
+        yield self.channel.send(request, timeout=60)
 
     @tornado.gen.coroutine
     def react_to_running(self, load):
@@ -104,4 +104,4 @@ class Reactor(object):
             'return': self.current_jobs,
             'success': True,
         }
-        ret = yield self.channel.send(request, timeout=60)
+        yield self.channel.send(request, timeout=60)
