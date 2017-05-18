@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--keysize', dest='keysize', type=int, default=1024,
-                       help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
+                       help='size of Salt keys generated for each evil minions (default is: 1024)')
     parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
                        help='path for the dump file (default: /tmp/minion-dump.yml)')
     args = parser.parse_args()
