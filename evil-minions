@@ -1,5 +1,7 @@
-#!/usr/bin/python
-'''Simulates minions via a dump file'''
+#!/usr/bin/env python
+'''
+Simulates minions via a dump file
+'''
 
 import argparse
 from functools import partial
