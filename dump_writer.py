@@ -1,8 +1,9 @@
 '''Classes to write dump files'''
 
-import logging
+import ast
 import time
 import yaml
+import logging
 
 import tornado.gen
 
@@ -38,9 +39,13 @@ class DumpWriter(object):
             'header' : header,
             'load' : load,
         }
-        self.dump_file.write("---\n")
+
         try:
-           self.dump_file.write(yaml.safe_dump(event, default_flow_style=False))
+           # Event sanization
+           event = ast.literal_eval(str(event))
+           yml_event = yaml.safe_dump(event, default_flow_style=False)
+           self.dump_file.write("---\n")
+           self.dump_file.write(yml_event)
            self.dump_file.flush()
         except Exception as exc:
            log.error("Event: {}".format(event))
