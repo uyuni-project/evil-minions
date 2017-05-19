@@ -22,6 +22,8 @@ def main():
     parser.add_argument('master', help='the master to connect to')
     parser.add_argument('--count', dest='count', type=int, default=10,
                        help='number of evil minions (default: 10)')
+    parser.add_argument('--id-offset', dest='offset', type=int, default=0,
+                       help='minion id counter offset for evil minions. (default: 0)')
     parser.add_argument('--slowdown-factor', dest='slowdown_factor', type=float, default=0.0,
                        help='slow down evil minions to behave realistically (default is 0.0 "as fast as possible", 1.0 is "as fast as the original")')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
@@ -56,7 +58,7 @@ def process_main(args, chunk):
     # start the evil!
     for i in chunk:
         evil_minion = EvilMinion(args.master,
-                                 'evil-%d' % i,
+                                 'evil-{}'.format(i + args.offset),
                                  args.slowdown_factor,
                                  dump_reader,
                                  io_loop,
