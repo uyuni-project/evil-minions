@@ -2,6 +2,7 @@
 
 from distutils.dir_util import mkpath
 import hashlib
+import os
 from uuid import UUID, uuid5
 
 import tornado.gen
