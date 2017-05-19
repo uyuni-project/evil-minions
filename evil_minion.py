@@ -11,7 +11,7 @@ from reactor import Reactor
 
 class EvilMinion(object):
     '''Simulates a minion replaying responses from a dump file'''
-    def __init__(self, master, minion_id, slowdown_factor, dump_reader, io_loop, keysize=1024):
+    def __init__(self, master, minion_id, slowdown_factor, dump_reader, io_loop, keysize):
         self.slowdown_factor = slowdown_factor
         self.dump_reader = dump_reader
         self.io_loop = io_loop
