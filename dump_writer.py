@@ -9,6 +9,7 @@ import tornado.gen
 
 from salt.transport.zeromq import AsyncZeroMQReqChannel
 from salt.transport.zeromq import AsyncZeroMQPubChannel
+from salt.utils.yamldumper import SafeOrderedDumper
 
 log = logging.getLogger(__name__)
 
@@ -40,16 +41,21 @@ class DumpWriter(object):
             'load' : load,
         }
 
+        yml_event = None
         try:
-           # Makes event dictionary friend of yaml.safe_dump
-           event = ast.literal_eval(str(event))
-           yml_event = yaml.safe_dump(event, default_flow_style=False)
-           self.dump_file.write("---\n")
-           self.dump_file.write(yml_event)
-           self.dump_file.flush()
-        except Exception as exc:
-           log.error("Event: {}".format(event))
-           log.error("Unable to dump event: {}".format(exc))
+            yml_event = yaml.dump(event, default_flow_style=False, Dumper=SafeOrderedDumper)
+        except yaml.representer.RepresenterError:
+            try:
+                event = ast.literal_eval(str(event))
+                yml_event = yaml.dump(event, default_flow_style=False, Dumper=SafeOrderedDumper)
+            except Exception as exc:
+                log.error("Event: {}".format(event))
+                log.error("Unable to dump event: {}".format(exc))
+        if yml_event:
+            self.dump_file.write("---\n")
+            self.dump_file.write(yml_event)
+            self.dump_file.flush()
+
 
 @tornado.gen.coroutine
 def _logging_send(self, load, **kwargs):
