@@ -52,6 +52,12 @@ def process_main(args, chunk):
     zmq.eventloop.ioloop.install()
     io_loop = zmq.eventloop.ioloop.ZMQIOLoop.current()
 
+    # HACK (brutal): force exactly one ZeroMQ context for the whole process
+    # this avoids the creation of 4 threads per evil minion
+    context = zmq.Context()
+    context.term = lambda: None
+    zmq.Context = lambda: context
+
     # set up the dump
     dump_reader = DumpReader(args.dump_path)
 
