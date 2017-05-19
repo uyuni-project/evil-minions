@@ -41,7 +41,7 @@ class DumpWriter(object):
         }
 
         try:
-           # Event sanization
+           # Makes event dictionary friend of yaml.safe_dump
            event = ast.literal_eval(str(event))
            yml_event = yaml.safe_dump(event, default_flow_style=False)
            self.dump_file.write("---\n")
