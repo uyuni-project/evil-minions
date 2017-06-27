@@ -6,7 +6,7 @@ The DumpWriter monkey-patches Salt's ZeroMQ I/O classes to save a trace of excha
 
 import distutils.spawn
 
-from dump_writer import DumpWriter
+from evilminions.dump_writer import DumpWriter
 
 def main():
     d = DumpWriter('/tmp/minion-dump.mp')

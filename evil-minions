@@ -13,8 +13,8 @@ import zmq
 import zmq.eventloop.ioloop
 import salt.log
 
-from dump_reader import DumpReader
-from evil_minion import EvilMinion
+from evilminions.dump_reader import DumpReader
+from evilminions.evil_minion import EvilMinion
 
 def main():
     # parse commandline switches
