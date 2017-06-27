@@ -32,8 +32,8 @@ def main():
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--keysize', dest='keysize', type=int, default=2048,
                        help='size of Salt keys generated for each evil minions (default: 2048)')
-    parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.yml',
-                       help='path for the dump file (default: /tmp/minion-dump.yml)')
+    parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.mp',
+                       help='path for the dump file (default: /tmp/minion-dump.mp)')
     args = parser.parse_args()
 
     # set up logging

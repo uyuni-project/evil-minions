@@ -1,27 +1,25 @@
 '''Classes to write dump files'''
 
-import ast
+import msgpack
 import time
-import yaml
 import logging
 
 import tornado.gen
 
 from salt.transport.zeromq import AsyncZeroMQReqChannel
 from salt.transport.zeromq import AsyncZeroMQPubChannel
-from salt.utils.yamldumper import SafeOrderedDumper
 
 log = logging.getLogger(__name__)
 
 
 class DumpWriter(object):
-    '''Dumps ZeroMQ I/O messages into a Yaml file.'''
+    '''Dumps ZeroMQ I/O messages into a MessagePack file.'''
 
     def __init__(self, trace_path):
         self.dump_file = open(trace_path, 'w+')
 
     def attach(self):
-        '''Monkey-patches ZeroMQ core I/O classes to dump exchanged messages to a Yaml file.'''
+        '''Monkey-patches ZeroMQ core I/O classes to dump exchanged messages to a dump file.'''
         AsyncZeroMQReqChannel.dump = self.dump
         AsyncZeroMQReqChannel.send_original = AsyncZeroMQReqChannel.send
         AsyncZeroMQReqChannel.send = _logging_send
@@ -43,19 +41,11 @@ class DumpWriter(object):
 
         yml_event = None
         try:
-            yml_event = yaml.dump(event, default_flow_style=False, Dumper=SafeOrderedDumper)
-        except yaml.representer.RepresenterError:
-            try:
-                event = ast.literal_eval(str(event))
-                yml_event = yaml.dump(event, default_flow_style=False, Dumper=SafeOrderedDumper)
-            except Exception as exc:
-                log.error("Event: {}".format(event))
-                log.error("Unable to dump event: {}".format(exc))
-        if yml_event:
-            self.dump_file.write("---\n")
-            self.dump_file.write(yml_event)
-            self.dump_file.flush()
-
+           self.dump_file.write(msgpack.packb(event))
+           self.dump_file.flush()
+        except Exception as exc:
+           log.error("Event: {}".format(event))
+           log.error("Unable to dump event: {}".format(exc))
 
 @tornado.gen.coroutine
 def _logging_send(self, load, **kwargs):

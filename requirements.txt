@@ -1,5 +1,5 @@
 salt
-PyYAML
+msgpack
 pyzmq
 requests
 tornado

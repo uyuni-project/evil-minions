@@ -1,7 +1,7 @@
 '''Utils to read dump files'''
 
 import logging
-import yaml
+import msgpack
 
 log = logging.getLogger(__name__)
 
@@ -36,12 +36,7 @@ def _read_dump(path):
     For this reason the function returns a time-ordered list of lists of events.
     '''
     with open(path, 'r') as dump_file:
-        try:
-            loader = yaml.CLoader
-        except AttributeError:
-            loader = yaml.Loader
-
-        dump = yaml.load_all(dump_file, Loader=loader)
+        dump = msgpack.Unpacker(dump_file)
 
         result = {}
         current_reactions = []

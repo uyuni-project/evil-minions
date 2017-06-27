@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 Script to start salt-minion with a DumpWriter instance attached.
-The DumpWriter monkey-patches Salt's ZeroMQ I/O classes to save a trace of exchanged messages in a Yaml file.
+The DumpWriter monkey-patches Salt's ZeroMQ I/O classes to save a trace of exchanged messages in a dump file.
 '''
 
 import distutils.spawn
@@ -9,7 +9,7 @@ import distutils.spawn
 from dump_writer import DumpWriter
 
 def main():
-    d = DumpWriter('/tmp/minion-dump.yml')
+    d = DumpWriter('/tmp/minion-dump.mp')
     d.attach()
     execfile(distutils.spawn.find_executable('salt-minion'))
 
