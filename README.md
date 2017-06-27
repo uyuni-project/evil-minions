@@ -27,11 +27,11 @@ Ongoing development, minimal functionality is there.
 
 ### Ideas and Usage
 
-This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `/tmp/minion-dump.yml` file.
+This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `/tmp/minion-dump.mp` file.
 
 ```
 (myvirtualenv) ~/evil-minions $ ./dumping-salt-minion
-# will create /tmp/minion-dump.yml
+# will create /tmp/minion-dump.mp
 ```
 
 This "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
@@ -53,13 +53,21 @@ By default, `evil-minions` will respond as fast as possible, which might not be 
 
 `--slowdown-factor` can be any positive floating-point value, for example:
  - `0.0`, the default value, makes `evil-minions` respond as fast as possible
- - `1.0` makes `evil-minion` introduce delays to match times observed and recorded in `minion-dump.yml`
- - `2.0` makes `evil-minion` react twice as slow as the times observed and recorded in `minion-dump.yml`
- - `0.5` makes `evil-minion` react twice as fast as the times observed and recorded in `minion-dump.yml`
+ - `1.0` makes `evil-minion` introduce delays to match times observed and recorded in `minion-dump.mp`
+ - `2.0` makes `evil-minion` react twice as slow as the times observed and recorded in `minion-dump.mp`
+ - `0.5` makes `evil-minion` react twice as fast as the times observed and recorded in `minion-dump.mp`
 
 
 Extra tunning of `evil-minions` is allowed via command line parameters.
 Please, use `evil-minions --help` to get the detailed list.
+
+### Development
+
+In order to inspect dump files, you can use [msgpack-tools](https://github.com/ludocode/msgpack-tools):
+
+```
+msgpack2json -Cpi minion-dump.mp
+```
 
 ### Known limitations
  - only the ZeroMQ transport is supported
