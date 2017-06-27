@@ -3,6 +3,8 @@
 import logging
 import msgpack
 
+from sets import Set
+
 log = logging.getLogger(__name__)
 
 class DumpReader(object):
@@ -11,7 +13,11 @@ class DumpReader(object):
 
     def get_replacements(self, symbolic_replacements):
         '''Turns a "symbolic" replacement list eg. {'machine_id' : '123456'} into an "actual" replacement list eg. {'987654' : '123456'}'''
-        return {_find_in_dump(key, self.dump): value for (key, value) in symbolic_replacements.items()}
+        result = {}
+        for (key, value) in symbolic_replacements.items():
+            for original_value in _find_in_dump(key, self.dump):
+                result[original_value] = value
+        return result
 
     def get_reactions(self, load, current_time, replacements):
         '''Return a list of reactions to a given load from a dump, assuming a current (simulated) time'''
@@ -83,19 +89,17 @@ def _immutable(data):
     return data
 
 def _find_in_dump(key, dump):
-    '''Returns a key from a list/dict stucture, recursively'''
+    '''Returns values corresponding to a key from a list/dict stucture, recursively'''
+    result = Set()
     if isinstance(dump, dict):
         if dump.has_key(key):
-            return dump[key]
+            result.add(dump[key])
         for _, sub_dump in dump.items():
-            found = _find_in_dump(key, sub_dump)
-            if found:
-                return found
+            result.update(_find_in_dump(key, sub_dump))
     if isinstance(dump, list):
         for sub_dump in dump:
-            found = _find_in_dump(key, sub_dump)
-            if found:
-                return found
+            result.update(_find_in_dump(key, sub_dump))
+    return result
 
 def _replace_in_dump(replacements, dump):
     '''Replaces occurences of replacements.keys with corresponding values in a list/dict structure, recursively'''
