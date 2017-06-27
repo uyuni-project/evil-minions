@@ -72,5 +72,4 @@ msgpack2json -Cpi minion-dump.mp
 ### Known limitations
  - only the ZeroMQ transport is supported
  - only `*` and exact minion id targeting are supported at the moment
- - delays between responses are not reproduced
  - some Salt features are not faithfully reproduced: `mine` events, `beacon` events, and `state.sls`'s `concurrent` option
