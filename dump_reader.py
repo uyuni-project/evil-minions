@@ -105,6 +105,9 @@ def _replace_in_dump(replacements, dump):
     if isinstance(dump, dict):
         return {k: _replace_in_dump(replacements, v) for k, v in dump.items()}
 
+    if dump is None:
+        return None
+
     if dump in replacements:
         return replacements[dump]
 
