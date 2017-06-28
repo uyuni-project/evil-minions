@@ -61,14 +61,6 @@ By default, `evil-minions` will respond as fast as possible, which might not be 
 Extra tunning of `evil-minions` is allowed via command line parameters.
 Please, use `evil-minions --help` to get the detailed list.
 
-### Development
-
-In order to inspect dump files, you can use [msgpack-tools](https://github.com/ludocode/msgpack-tools):
-
-```
-msgpack2json -Cpi minion-dump.mp
-```
-
 ### Known limitations
  - only the ZeroMQ transport is supported
  - only `*` and exact minion id targeting are supported at the moment
