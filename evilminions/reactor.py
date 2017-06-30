@@ -33,7 +33,7 @@ class Reactor(object):
     @tornado.gen.coroutine
     def start(self):
         '''Dispatches REQs that fire off automatically when the minion starts'''
-        self.dispatch({'load': {'fun': None, 'arg': None, 'tgt': self.minion_id, 'load': None, 'jid': None}})
+        self.dispatch({'load': {'fun': None, 'arg': None, 'tgt': [self.minion_id], 'tgt_type': 'list', 'load': None, 'jid': None}})
 
     @tornado.gen.coroutine
     def dispatch(self, load):
@@ -42,8 +42,11 @@ class Reactor(object):
         fun = load['fun']
         arg = load['arg']
         tgt = load['tgt']
+        tgt_type = load['tgt_type']
 
-        if tgt != '*' and self.minion_id not in tgt:
+        if tgt != self.minion_id and (
+            (tgt_type == 'glob' and tgt != '*') or
+            (tgt_type == 'list' and self.minion_id not in tgt)):
             log.trace("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
