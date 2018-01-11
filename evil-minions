@@ -40,9 +40,13 @@ def main():
     salt.log.setup_console_logger(log_level='debug')
 
     # set up processes
-    for chunk in minion_chunks(args.count, args.processes):
-        p = Process(target=process_main, args=(args, chunk))
+    for i, chunk in enumerate(minion_chunks(args.count, args.processes)):
+        p = Process(target=profile, args=(args, chunk, i))
         p.start()
+
+def profile(args, chunk, i):
+    import cProfile
+    cProfile.runctx('process_main(args, chunk)',{'args':args, 'chunk':chunk, 'process_main': process_main}, {}, 'prof%s' % i)
 
 def process_main(args, chunk):
     '''Per-process entry point'''
