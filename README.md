@@ -34,7 +34,14 @@ This project contains a script, `dumping-salt-minion`, that runs `salt-minion` w
 # will create /tmp/minion-dump.mp
 ```
 
-This "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
+Running `salt-minion` this way will work in most scenarios, but the dumping will be incomplete if the daemon is restarted (this can happen, for instance, while upgrading Salt with Salt). A more robust approach in this sense is to patch the systemd unit file for `salt-minion`, eg. `/usr/lib/systemd/system/salt-minion.service`, changing the following line:
+```
+ExecStart=/root/evil-minions/dumping-salt-minion
+```
+
+then running `sudo systemctl daemon-reload`.
+
+The "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
 
 ```
 (myvirtualenv) ~/evil-minions $ ./evil-minions --count 5 <MASTER_FQDN>
