@@ -16,7 +16,7 @@ class DumpWriter(object):
     '''Dumps ZeroMQ I/O messages into a MessagePack file.'''
 
     def __init__(self, trace_path):
-        self.dump_file = open(trace_path, 'w+')
+        self.dump_file = open(trace_path, 'a+')
 
     def attach(self):
         '''Monkey-patches ZeroMQ core I/O classes to dump exchanged messages to a dump file.'''
