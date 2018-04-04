@@ -4,14 +4,36 @@
 
 `evil-minions` is a load generator for [Salt Open](https://saltstack.com/salt-open-source/). It is being developed at SUSE to aid [SUSE Manager](https://www.suse.com/products/suse-manager/) scalability testing.
 
-### Status
+### Usage
 
-Ongoing development, minimal functionality is there.
+`evil-minions` is composed of two tools:
+ - a monkey-patching `salt-minion` script that "records" the behavior of a Salt minion to a dump file
+ - an `evil-minions` script which is able to "play back" a dump file multiple times in parallel
 
-### Installation
+The recommended way to use evil-minions is with [sumaform](https://github.com/moio/sumaform). If you are already using it, just follow the [sumaform-specific instructions](https://github.com/moio/sumaform/blob/master/README_ADVANCED.md#evil-minions-load-generator).
+
+### Manual usage (recording)
 
  - Clone this git repository
- - Create and activate a new Python virtualenv:
+ - Install Python dependencies:
+
+```
+~/evil-minions $ pip install -r requirements.txt
+```
+ - Patch the systemd unit file for `salt-minion`, eg. `/usr/lib/systemd/system/salt-minion.service`, changing the following line:
+```
+ExecStart=/root/evil-minions/dumping-salt-minion
+```
+
+then running `sudo systemctl daemon-reload`.
+
+After starting `salt-minion` a dump of all ZeroMQ traffic will be created in `/tmp/minion-dump.mp`.
+
+### Manual usage (playback)
+
+ - Collect a dump file (see previous section)
+ - Clone this git repository
+ - Optionally, create and activate a new Python virtualenv:
 
 ```
 ~ $ cd evil-minions
@@ -24,24 +46,11 @@ Ongoing development, minimal functionality is there.
 ```
 (myvirtualenv) ~/evil-minions $ pip install -r requirements.txt
 ```
+ 
+ - run the `evil-minions` script, pointing it to the dump file.
 
-### Ideas and Usage
 
-This project contains a script, `dumping-salt-minion`, that runs `salt-minion` while dumping all ZeroMQ traffic into a `/tmp/minion-dump.mp` file.
-
-```
-(myvirtualenv) ~/evil-minions $ ./dumping-salt-minion
-# will create /tmp/minion-dump.mp
-```
-
-Running `salt-minion` this way will work in most scenarios, but the dumping will be incomplete if the daemon is restarted (this can happen, for instance, while upgrading Salt with Salt). A more robust approach in this sense is to patch the systemd unit file for `salt-minion`, eg. `/usr/lib/systemd/system/salt-minion.service`, changing the following line:
-```
-ExecStart=/root/evil-minions/dumping-salt-minion
-```
-
-then running `sudo systemctl daemon-reload`.
-
-The "dump" can be fed to the `evil-minions` script, which will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
+By default the `evil-minions` script will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via a commandline switch:
 
 ```
 (myvirtualenv) ~/evil-minions $ ./evil-minions --count 5 <MASTER_FQDN>
