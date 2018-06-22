@@ -36,6 +36,7 @@ class EvilMinion(object):
 
             'master': master,
             'master_ip': master,
+            'master_port': 4506,
             'master_uri': 'tcp://%s:4506' % master,
             'acceptance_wait_time': 10,
             'acceptance_wait_time_max': 0,
