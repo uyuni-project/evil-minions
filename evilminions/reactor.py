@@ -51,7 +51,9 @@ class Reactor(object):
             return
 
         # react in ad-hoc ways to some special calls
-        if fun == 'saltutil.find_job':
+        if fun == 'test.ping':
+            yield self.react_to_ping(load)
+        elif fun == 'saltutil.find_job':
             yield self.react_to_find_job(load)
         elif fun == 'saltutil.running':
             yield self.react_to_running(load)
@@ -78,6 +80,21 @@ class Reactor(object):
             yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
             yield self.channel.send(request, timeout=60)
         self.current_jobs.remove(load)
+
+    @tornado.gen.coroutine
+    def react_to_ping(self, load):
+        '''Dispatches a reaction to a ping call'''
+        request = {
+            'cmd': '_return',
+            'fun': load['fun'],
+            'fun_args': load['arg'],
+            'id': self.minion_id,
+            'jid': load['jid'],
+            'retcode': 0,
+            'return': True,
+            'success': True,
+        }
+        yield self.channel.send(request, timeout=60)
 
     @tornado.gen.coroutine
     def react_to_find_job(self, load):
