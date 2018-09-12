@@ -50,17 +50,20 @@ class Reactor(object):
             log.trace("Ignoring %s call that targets %s, not me (%s)", fun, tgt, self.minion_id)
             return
 
-        reactions = self.dump_reader.get_reactions(load, self.current_time, self.replacements)
-
-        if reactions:
-            self.current_time = reactions[-1]['header']['time']
-            yield self.react(load, reactions)
-        elif fun == 'saltutil.find_job':
+        # react in ad-hoc ways to some special calls
+        if fun == 'saltutil.find_job':
             yield self.react_to_find_job(load)
         elif fun == 'saltutil.running':
             yield self.react_to_running(load)
         else:
-            log.error("No dump entry corresponding to function %s with parameters %s was found", fun, arg)
+            # try to find a suitable reaction from the dump and use it
+            reactions = self.dump_reader.get_reactions(load, self.current_time, self.replacements)
+
+            if reactions:
+                self.current_time = reactions[-1]['header']['time']
+                yield self.react(load, reactions)
+            else:
+                log.error("No dump entry corresponding to function %s with parameters %s was found", fun, arg)
 
     @tornado.gen.coroutine
     def react(self, load, reactions):
