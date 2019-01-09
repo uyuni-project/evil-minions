@@ -1,81 +1,83 @@
 #!/usr/bin/env python
 '''
-Simulates minions via a dump file
+Script to start a salt-minion that will act as many minions (from salt-master's
+point of view).
+Every response sent by the minion will be replicated and sent out separately
+to the master with different minion ids, as if multiple minions were connected
+and responding in the same way.
 '''
 
 import argparse
-from functools import partial
-import logging
+import distutils.spawn
 from multiprocessing import Process, cpu_count
 import sys
+import time
 
-import zmq
-import zmq.eventloop.ioloop
 import salt.log
 
-from evilminions.dump_reader import DumpReader
-from evilminions.evil_minion import EvilMinion
+from evilminions.proxy import Proxy
+from evilminions.vampire import Vampire
+from evilminions.hydra import Hydra
 
 def main():
     # parse commandline switches
-    parser = argparse.ArgumentParser(description='Simulates a minion given a dump file.')
-    parser.add_argument('master', help='the master to connect to')
+    parser = argparse.ArgumentParser(description='Starts a salt-minion and many evil minions that mimic it.')
     parser.add_argument('--count', dest='count', type=int, default=10,
                        help='number of evil minions (default: 10)')
     parser.add_argument('--id-prefix', dest='prefix', default='evil',
                        help='minion id prefix for evil minions. (default: evil)')
     parser.add_argument('--id-offset', dest='offset', type=int, default=0,
                        help='minion id counter offset for evil minions. (default: 0)')
+    parser.add_argument('--ramp-up-delay', dest='ramp_up_delay', type=int, default=0,
+                       help='time between evil minion starts in seconds (default: 0)')
     parser.add_argument('--slowdown-factor', dest='slowdown_factor', type=float, default=0.0,
                        help='slow down evil minions to behave realistically (default is 0.0 "as fast as possible", 1.0 is "as fast as the original")')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--keysize', dest='keysize', type=int, default=2048,
-                       help='size of Salt keys generated for each evil minions (default: 2048)')
-    parser.add_argument('--dump-path', dest='dump_path', default='/tmp/minion-dump.mp',
-                       help='path for the dump file (default: /tmp/minion-dump.mp)')
-    args = parser.parse_args()
+                       help='size of Salt keys generated for each evil minion (default: 2048)')
+    args, remaining_args = parser.parse_known_args()
 
     # set up logging
     salt.log.setup_console_logger(log_level='debug')
 
-    # set up processes
-    for chunk in minion_chunks(args.count, args.processes):
-        p = Process(target=process_main, args=(args, chunk))
-        p.start()
+    # set up Vampire, to intercept messages from the original minion and send them to Proxy
+    vampire = Vampire()
+    vampire.attach()
 
-def process_main(args, chunk):
-    '''Per-process entry point'''
-    # set up logging
-    log = logging.getLogger(__name__)
-    log.debug("Starting pool: %s" % chunk)
+    # set up Proxy, to route messages from Vampire to Hydras
+    proxy = Process(target=Proxy().start)
+    proxy.start()
 
-    # set up the IO loop
-    zmq.eventloop.ioloop.install()
-    io_loop = zmq.eventloop.ioloop.ZMQIOLoop.current()
+    # set up Hydras (one per process). Each Hydra gets a chunk of the evil minions
+    # Ultimately, each Hydra will have one Head per evil minion
+    chunks = minion_chunks(args.count, args.processes)
+    hydras = [Process(target=Hydra().start, kwargs={
+        'hydra_number': i,
+        'hydra_count': len(chunks),
+        'chunk': chunk,
+        'prefix': args.prefix,
+        'offset': args.offset,
+        'ramp_up_delay': args.ramp_up_delay,
+        'slowdown_factor': args.slowdown_factor,
+        'keysize': args.keysize,
+    }) for i, chunk in enumerate(chunks)]
 
-    # HACK (brutal): force exactly one ZeroMQ context for the whole process
-    # this avoids the creation of 4 threads per evil minion
-    context = zmq.Context()
-    context.term = lambda: None
-    zmq.Context = lambda: context
+    for hydra in hydras:
+        hydra.start()
 
-    # set up the dump
-    dump_reader = DumpReader(args.dump_path)
+    # HACK: wait for all ZeroMQ connections to be established
+    # I tried without success semaphore synchronization, but this is not really robust in ZeroMQ.
+    # Textbook solution would be to use more sockets just for synchronization, I am not doing that here
+    # see "slow joiners" in http://zguide.zeromq.org
+    time.sleep(5)
 
-    # start the evil!
-    for i in chunk:
-        evil_minion = EvilMinion(args.master,
-                                 '{}-{}'.format(args.prefix, i + args.offset),
-                                 args.slowdown_factor,
-                                 dump_reader,
-                                 io_loop,
-                                 keysize=args.keysize)
-        io_loop.spawn_callback(evil_minion.start)
-    io_loop.start()
+    # restore salt-minion's orignal command line args and launch it
+    sys.argv = [sys.argv[0]] + remaining_args
+    execfile(distutils.spawn.find_executable('salt-minion'))
 
 def minion_chunks(count, processes):
-    '''Returns chunks of minion indexes, per process (eg. 3 CPUs and 4 processes: [[0, 1], [2], [3]])'''
+    '''Returns chunks of minion indexes, per process (eg. 4 minions and 3 processes: [[0, 1], [2], [3]])'''
     minions_per_process = count / processes
     rest = count % processes
     lengths = [minions_per_process + 1] * rest + [minions_per_process] * (processes - rest)
