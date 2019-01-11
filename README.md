@@ -28,37 +28,42 @@ Other distros: install via pip
 git checkout https://github.com/moio/evil-minions.git
 cd evil-minions
 pip install -r requirements.txt
+
+mkdir -p /etc/systemd/system/salt-minion.service.d
+cp override.conf /etc/systemd/system/salt-minion.service.d
 ```
 
 ### Usage
 
-Copy the override.conf file from this repository to /etc/systemd/system/salt-minion.service.d and restart the salt-minion service:
-```
-mkdir -p /etc/systemd/system/salt-minion.service.d
-cp evil-minions/override.conf /etc/systemd/system/salt-minion.service.d
-systemctl daemon-reload
-systemctl restart salt-minion
-```
+Starting salt-minion will automatically spawn any configured evil minions (10 by default). `systemd` is used in order to work correctly in case the minion service is restarted.
 
-This is done automatically if you use sumaform.
+Every time the original minion receives and responds to a command, the command itself and the responses are "learned" by evil minions which will subsequently be able to respond to the same command. In practice, issuing the same command to all minions will work, eg.
 
+`salt '*' test.ping`
 
-By default the `evil-minions` script will mimic the original minion by sending the same responses to equivalent requests coming from the master. It will by default simulate 10 copies of the original minion; the count can be changed via the `--count` commandline switch in `override.conf`.
+evil minions will wait if presented with a command they have not learnt yet from the original minion.
 
-Simulating minions is not very resource intensive, as one minion will typically consume:
+Several parameters can be changed via commandline options in `/etc/systemd/system/salt-minion.service.d/override.conf`.
+
+#### `--count` <number of evil minions>
+
+The number of evil minions can can be changed via the `--count` commandline switch. Simulating minions is not very resource intensive, as one minion will typically consume:
  - ~10 open files (use `ulimit -n <10 * COUNT>` to increase the limit prior running `evil-minions`)
  - ~2 MB of main memory
  - ~0.1% of a modern x86_64 core (circa 2016)
 
 `evil-minions` combines [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html) and [Tornado](https://www.tornadoweb.org/en/stable/) to fully utilize available CPUs.
 
-By default, `evil-minions` will respond as fast as possible, which might not be appropriate depending on the objectives of your simulation. To reproduce delays observed by the original minion from which the dump was taken, use the `--slowdown-factor` switch:
- - `0.0`, the default value, makes `evil-minions` respond as fast as possible
- - `1.0` makes `evil-minion` introduce delays to match times observed and recorded in `minion-dump.mp`
- - `2.0` makes `evil-minion` react twice as slow as the times observed and recorded in `minion-dump.mp`
- - `0.5` makes `evil-minion` react twice as fast as the times observed and recorded in `minion-dump.mp`
+#### `--slowdown-factor` <number>
 
-Extra tuning of `evil-minions` is allowed via command line parameters.
+By default, evil minions will respond as fast as possible, which might not be appropriate depending on the objectives of your simulation. To reproduce delays observed by the original minion from which the dump was taken, use the `--slowdown-factor` switch:
+ - `0.0`, the default value, makes evil minions respond as fast as possible
+ - `1.0` makes `evil-minion` introduce delays to match the response times of the original minion
+ - `2.0` makes `evil-minion` react twice as slow as the original minion
+ - `0.5` makes `evil-minion` react twice as fast as the original minion
+
+#### Other parameters
+
 Please, use `evil-minions --help` to get the detailed list.
 
 ### Known limitations
