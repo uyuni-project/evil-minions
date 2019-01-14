@@ -40,9 +40,9 @@ def main():
     args, remaining_args = parser.parse_known_args()
 
     # set up logging
-    salt.log.setup_console_logger(log_level='debug')
     log = logging.getLogger(__name__)
     log.debug("Starting evil-minions, setting up infrastructure...")
+    salt.log.setup_console_logger(log_level='debug')
 
 
     # set up Vampire, to intercept messages from the original minion and send them to Proxy
