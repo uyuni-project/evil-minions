@@ -44,17 +44,8 @@ def main():
     log.debug("Starting evil-minions, setting up infrastructure...")
     salt.log.setup_console_logger(log_level='debug')
 
-
-    # set up Vampire, to intercept messages from the original minion and send them to Proxy
-    vampire = Vampire()
-    vampire.attach()
-
-    # set up Proxy, to route messages from Vampire to Hydras
-    proxy = Process(target=Proxy().start)
-    proxy.start()
-
-    # set up Hydras (one per process). Each Hydra gets a chunk of the evil minions
-    # Ultimately, each Hydra will have one Head per evil minion
+    # set up Hydras, one per process. Hydras are so called because they have
+    # many HydraHeads, each HydraHead running one evil-minion
     chunks = minion_chunks(args.count, args.processes)
     hydras = [Process(target=Hydra().start, kwargs={
         'hydra_number': i,
@@ -69,6 +60,14 @@ def main():
 
     for hydra in hydras:
         hydra.start()
+
+    # set up Vampire, to intercept messages from the original minion and send them to Proxy
+    vampire = Vampire()
+    vampire.attach()
+
+    # set up Proxy, to route messages from Vampire to Hydras
+    proxy = Process(target=Proxy().start)
+    proxy.start()
 
     # HACK: wait for all ZeroMQ connections to be established
     # I tried without success semaphore synchronization, but this is not really robust in ZeroMQ.
