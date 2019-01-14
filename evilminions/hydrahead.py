@@ -118,7 +118,7 @@ class HydraHead(object):
 
             reactions = self.get_reactions(call_id)
             while not reactions:
-                self.log.trace("No known reaction for call: {}, sleeping 1 second and retrying".format(call_id))
+                self.log.debug("No known reaction for call: {}, sleeping 1 second and retrying".format(call_id))
                 yield tornado.gen.sleep(1)
                 reactions = self.get_reactions(call_id)
 
