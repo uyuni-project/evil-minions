@@ -49,6 +49,8 @@ class Vampire(object):
             io_loop = IOLoop.current()
             stream = zmq.eventloop.zmqstream.ZMQStream(zsocket, io_loop)
             stream.send(self.serial.dumps(event))
+            stream.flush()
+            stream.close()
         except Exception as exc:
            log.error("Event: {}".format(event))
            log.error("Unable to dump event: {}".format(exc))
