@@ -47,10 +47,12 @@ Several parameters can be changed via commandline options in `/etc/systemd/syste
 
 #### `--count` <number of evil minions>
 
-The number of evil minions can can be changed via the `--count` commandline switch. Simulating minions is not very resource intensive, as one minion will typically consume:
- - ~10 open files (use `ulimit -n <10 * COUNT>` to increase the limit prior running `evil-minions`)
- - ~2 MB of main memory
- - ~0.1% of a modern x86_64 core (circa 2016)
+The number of evil minions can can be changed via the `--count` commandline switch.
+
+Simulating minions is not very resource intensive:
+ - each evil-minon consumes ~2 MB of main memory, so thousands can be fit on a modern server
+ - ~1000 evil-minions can be simulated at full speed (or near full speed) on one modern x86_64 core (circa 2018)
+   - this means that a hypervisor vCPU, typically mapped to one HyperThread, will be able to support hundreds of evil minions
 
 `evil-minions` combines [multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html) and [Tornado](https://www.tornadoweb.org/en/stable/) to fully utilize available CPUs.
 
