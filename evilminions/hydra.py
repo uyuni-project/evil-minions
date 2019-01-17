@@ -27,6 +27,7 @@ class Hydra(object):
 
     def start(self, hydra_number, hydra_count, chunk, prefix, offset, ramp_up_delay, slowdown_factor, keysize):
         '''Per-process entry point (one per Hydra)'''
+        self.hydra_number = hydra_number
 
         # set up logging
         self.log = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ class Hydra(object):
                 if load['cmd'] == '_return':
                     call_id = fun_call_id(load['fun'], load['fun_args'])
                     self.reactions[call_id] = (self.reactions.get(call_id) or []) + [self.current_reactions]
-                    self.log.debug("Learnt reaction for call: {}".format(call_id))
+                    self.log.debug("Hydra #{} learned reaction #{} for call: {}".format(self.hydra_number, len(self.reactions[call_id]), call_id))
                     self.current_reactions = []
 
                 event['header']['duration'] = current_time - self.last_time
