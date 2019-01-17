@@ -73,7 +73,7 @@ def main():
     # I tried without success semaphore synchronization, but this is not really robust in ZeroMQ.
     # Textbook solution would be to use more sockets just for synchronization, I am not doing that here
     # see "slow joiners" in http://zguide.zeromq.org
-    time.sleep(5)
+    time.sleep(args.count/10.0)
 
     # restore salt-minion's orignal command line args and launch it
     sys.argv = [sys.argv[0]] + remaining_args
