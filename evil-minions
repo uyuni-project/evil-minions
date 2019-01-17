@@ -41,8 +41,8 @@ def main():
 
     # set up logging
     log = logging.getLogger(__name__)
-    log.debug("Starting evil-minions, setting up infrastructure...")
     salt.log.setup_console_logger(log_level='debug')
+    log.debug("Starting evil-minions, setting up infrastructure...")
 
     # set up Hydras, one per process. Hydras are so called because they have
     # many HydraHeads, each HydraHead running one evil-minion
