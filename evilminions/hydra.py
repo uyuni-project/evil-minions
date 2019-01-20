@@ -50,7 +50,7 @@ class Hydra(object):
         grains = salt.loader.grains(opts)
 
         # set up heads!
-        first_head_number = chunk[0]
+        first_head_number = chunk[0] if chunk else 0
         delays = [ramp_up_delay * ((head_number - first_head_number) * hydra_count + hydra_number) for head_number in chunk]
         offset_head_numbers = [head_number + offset for head_number in chunk]
         heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains, delays[i], slowdown_factor, self.reactions) for i in range(len(chunk))]
