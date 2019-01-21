@@ -8,6 +8,15 @@ def replace_recursively(replacements, dump):
     if isinstance(dump, dict):
         return {k: replace_recursively(replacements, v) for k, v in dump.items()}
 
+    if isinstance(dump, str):
+        try:
+            result = dump
+            for original, new in replacements.items():
+                result = result.replace(original, new)
+            return result
+        except UnicodeDecodeError:
+            return dump
+
     if dump is None:
         return None
 
