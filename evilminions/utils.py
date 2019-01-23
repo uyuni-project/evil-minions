@@ -17,9 +17,6 @@ def replace_recursively(replacements, dump):
         except UnicodeDecodeError:
             return dump
 
-    if dump is None:
-        return None
-
     if dump in replacements:
         return replacements[dump]
 

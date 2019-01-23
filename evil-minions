@@ -12,11 +12,10 @@ import distutils.spawn
 import logging
 from multiprocessing import Process, cpu_count, Semaphore
 import sys
-import time
 
 import salt.log
 
-from evilminions.proxy import Proxy
+from evilminions.proxy import start_proxy
 from evilminions.vampire import Vampire
 from evilminions.hydra import Hydra
 
@@ -32,7 +31,8 @@ def main():
     parser.add_argument('--ramp-up-delay', dest='ramp_up_delay', type=int, default=0,
                        help='time between evil minion starts in seconds (default: 0)')
     parser.add_argument('--slowdown-factor', dest='slowdown_factor', type=float, default=0.0,
-                       help='slow down evil minions to behave realistically (default is 0.0 "as fast as possible", 1.0 is "as fast as the original")')
+                       help='slow down evil minions (default is 0.0 "as fast as possible", ' +
+                       '1.0 is "as fast as the original")')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--keysize', dest='keysize', type=int, default=2048,
@@ -48,8 +48,7 @@ def main():
     # many HydraHeads, each HydraHead running one evil-minion
     semaphore = Semaphore(0)
     chunks = minion_chunks(args.count, args.processes)
-    hydras = [Process(target=Hydra().start, kwargs={
-        'hydra_number': i,
+    hydras = [Process(target=Hydra(i).start, kwargs={
         'hydra_count': len(chunks),
         'chunk': chunk,
         'prefix': args.prefix,
@@ -71,7 +70,7 @@ def main():
     vampire.attach()
 
     # set up Proxy, to route messages from Vampire to Hydras
-    proxy = Process(target=Proxy().start, kwargs={'semaphore': semaphore})
+    proxy = Process(target=start_proxy, kwargs={'semaphore': semaphore})
     proxy.start()
     semaphore.acquire()
 

@@ -52,8 +52,8 @@ class Vampire(object):
             stream.flush()
             stream.close()
         except Exception as exc:
-           log.error("Event: {}".format(event))
-           log.error("Unable to dump event: {}".format(exc))
+            log.error("Event: {}".format(event))
+            log.error("Unable to dump event: {}".format(exc))
 
 @tornado.gen.coroutine
 def _dumping_send(self, load, **kwargs):

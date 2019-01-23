@@ -79,7 +79,7 @@ class HydraHead(object):
         '''Opens ZeroMQ sockets, starts listening to PUB events and kicks off initial REQs'''
         self.log = logging.getLogger(__name__)
         yield tornado.gen.sleep(self.ramp_up_delay)
-        self.log.info("HydraHead %s started" % self.opts['id'])
+        self.log.info("HydraHead %s started", self.opts['id'])
 
         factory_kwargs = {'timeout': 60, 'safe': True, 'io_loop': self.io_loop}
         pub_channel = salt.transport.client.AsyncPubChannel.factory(self.opts, **factory_kwargs)
@@ -88,14 +88,14 @@ class HydraHead(object):
         self.req_channel = salt.transport.client.AsyncReqChannel.factory(self.opts, **factory_kwargs)
 
         pub_channel.on_recv(self.mimic)
-        yield self.mimic({'load': {'fun': None, 'arg': None, 'tgt': [self.minion_id], 'tgt_type': 'list', 'load': None, 'jid': None}})
+        yield self.mimic({'load': {'fun': None, 'arg': None, 'tgt': [self.minion_id],
+                                   'tgt_type': 'list', 'load': None, 'jid': None}})
 
     @tornado.gen.coroutine
     def mimic(self, load):
         '''Finds appropriate reactions to a PUB message and dispatches them'''
         load = load['load']
         fun = load['fun']
-        arg = load['arg']
         tgt = load['tgt']
         tgt_type = load['tgt_type']
 
@@ -126,6 +126,7 @@ class HydraHead(object):
             yield self.react(load, reactions)
 
     def get_reactions(self, call_id):
+        '''Returns reactions for the specified call_id'''
         reaction_sets = self.reactions.get(call_id)
         if not reaction_sets:
             return None

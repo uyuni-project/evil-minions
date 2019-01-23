@@ -18,20 +18,21 @@ salt.log.mixins.LoggingTraceMixIn.trace = lambda self, msg, *args, **kwargs: Non
 
 class Hydra(object):
     '''Spawns HydraHeads, listens for messages coming from the Vampire.'''
-    def __init__(self):
+    def __init__(self, hydra_number):
+        self.hydra_number = hydra_number
         self.current_reactions = []
         self.reactions = {}
         self.last_time = None
         self.serial = salt.payload.Serial({})
         self.log = None
 
-    def start(self, hydra_number, hydra_count, chunk, prefix, offset, ramp_up_delay, slowdown_factor, keysize, semaphore):
+    def start(self, hydra_count, chunk, prefix, offset,
+              ramp_up_delay, slowdown_factor, keysize, semaphore):
         '''Per-process entry point (one per Hydra)'''
-        self.hydra_number = hydra_number
 
         # set up logging
         self.log = logging.getLogger(__name__)
-        self.log.debug("Starting Hydra on: %s" % chunk)
+        self.log.debug("Starting Hydra on: %s", chunk)
 
         # set up the IO loop
         zmq.eventloop.ioloop.install()
@@ -51,9 +52,11 @@ class Hydra(object):
 
         # set up heads!
         first_head_number = chunk[0] if chunk else 0
-        delays = [ramp_up_delay * ((head_number - first_head_number) * hydra_count + hydra_number) for head_number in chunk]
+        delays = [ramp_up_delay * ((head_number - first_head_number) * hydra_count + self.hydra_number)
+                  for head_number in chunk]
         offset_head_numbers = [head_number + offset for head_number in chunk]
-        heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains, delays[i], slowdown_factor, self.reactions) for i in range(len(chunk))]
+        heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains,
+                           delays[i], slowdown_factor, self.reactions) for i in range(len(chunk))]
 
         # start heads!
         for head in heads:
@@ -65,7 +68,8 @@ class Hydra(object):
 
     @tornado.gen.coroutine
     def update_reactions(self, packed_events):
-        '''Called whenever a message from Vampire is received. Updates the internal self.reactions hash to contain reactions that will be mimicked'''
+        '''Called whenever a message from Vampire is received.
+        Updates the internal self.reactions hash to contain reactions that will be mimicked'''
         for packed_event in packed_events:
             event = self.serial.loads(packed_event)
 
@@ -84,7 +88,9 @@ class Hydra(object):
                 if load['cmd'] == '_return':
                     call_id = fun_call_id(load['fun'], load['fun_args'])
                     self.reactions[call_id] = (self.reactions.get(call_id) or []) + [self.current_reactions]
-                    self.log.debug("Hydra #{} learned reaction #{} for call: {}".format(self.hydra_number, len(self.reactions[call_id]), call_id))
+                    self.log.debug("Hydra #{} learned reaction #{} for call: {}".format(self.hydra_number,
+                                                                                        len(self.reactions[call_id]),
+                                                                                        call_id))
                     self.current_reactions = []
 
                 event['header']['duration'] = current_time - self.last_time
