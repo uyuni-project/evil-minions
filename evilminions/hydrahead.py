@@ -79,7 +79,7 @@ class HydraHead(object):
         '''Opens ZeroMQ sockets, starts listening to PUB events and kicks off initial REQs'''
         self.log = logging.getLogger(__name__)
         yield tornado.gen.sleep(self.ramp_up_delay)
-        self.log.error("HydraHead %s started" % self.opts['id'])
+        self.log.info("HydraHead %s started" % self.opts['id'])
 
         factory_kwargs = {'timeout': 60, 'safe': True, 'io_loop': self.io_loop}
         pub_channel = salt.transport.client.AsyncPubChannel.factory(self.opts, **factory_kwargs)
