@@ -25,7 +25,7 @@ class Hydra(object):
         self.serial = salt.payload.Serial({})
         self.log = None
 
-    def start(self, hydra_number, hydra_count, chunk, prefix, offset, ramp_up_delay, slowdown_factor, keysize):
+    def start(self, hydra_number, hydra_count, chunk, prefix, offset, ramp_up_delay, slowdown_factor, keysize, semaphore):
         '''Per-process entry point (one per Hydra)'''
         self.hydra_number = hydra_number
 
@@ -58,6 +58,8 @@ class Hydra(object):
         # start heads!
         for head in heads:
             io_loop.spawn_callback(head.start)
+
+        semaphore.release()
 
         io_loop.start()
 

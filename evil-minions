@@ -10,7 +10,7 @@ and responding in the same way.
 import argparse
 import distutils.spawn
 import logging
-from multiprocessing import Process, cpu_count
+from multiprocessing import Process, cpu_count, Semaphore
 import sys
 import time
 
@@ -46,6 +46,7 @@ def main():
 
     # set up Hydras, one per process. Hydras are so called because they have
     # many HydraHeads, each HydraHead running one evil-minion
+    semaphore = Semaphore(0)
     chunks = minion_chunks(args.count, args.processes)
     hydras = [Process(target=Hydra().start, kwargs={
         'hydra_number': i,
@@ -56,24 +57,23 @@ def main():
         'ramp_up_delay': args.ramp_up_delay,
         'slowdown_factor': args.slowdown_factor,
         'keysize': args.keysize,
+        'semaphore': semaphore
     }) for i, chunk in enumerate(chunks)]
 
     for hydra in hydras:
         hydra.start()
+
+    for hydra in hydras:
+        semaphore.acquire()
 
     # set up Vampire, to intercept messages from the original minion and send them to Proxy
     vampire = Vampire()
     vampire.attach()
 
     # set up Proxy, to route messages from Vampire to Hydras
-    proxy = Process(target=Proxy().start)
+    proxy = Process(target=Proxy().start, kwargs={'semaphore': semaphore})
     proxy.start()
-
-    # HACK: wait for all ZeroMQ connections to be established
-    # I tried without success semaphore synchronization, but this is not really robust in ZeroMQ.
-    # Textbook solution would be to use more sockets just for synchronization, I am not doing that here
-    # see "slow joiners" in http://zguide.zeromq.org
-    time.sleep(args.count/10.0)
+    semaphore.acquire()
 
     # restore salt-minion's orignal command line args and launch it
     sys.argv = [sys.argv[0]] + remaining_args

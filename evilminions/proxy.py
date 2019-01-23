@@ -9,7 +9,7 @@ class Proxy(object):
     def __init__(self):
         pass
 
-    def start(self):
+    def start(self, semaphore):
         # set up logging
         log = logging.getLogger(__name__)
 
@@ -22,4 +22,5 @@ class Proxy(object):
         xpub = context.socket(zmq.PUB)
         xpub.bind('ipc:///tmp/evil-minions-pub.ipc')
         log.debug("Proxy ready")
+        semaphore.release()
         zmq.proxy(xpub, xsub)
