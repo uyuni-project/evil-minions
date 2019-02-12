@@ -24,13 +24,19 @@ def replace_recursively(replacements, dump):
 
 def fun_call_id(fun, args):
     '''Returns a hashable object that represents the call of a function, with actual parameters'''
-    clean_args = [_zap_kwarg(arg) for arg in args or []]
+    clean_args = [_zap_uyuni_specifics(_zap_kwarg(arg)) for arg in args or []]
     return (fun, _immutable(clean_args))
 
 def _zap_kwarg(arg):
     '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys recursively removed'''
     if isinstance(arg, dict):
         return {k: v for k, v in arg.items() if k != '__kwarg__'}
+    return arg
+
+def _zap_uyuni_specifics(arg):
+    '''Takes a list/dict stucture and returns a copy with SUSE Manager/Uyuni specific varying keys removed'''
+    if isinstance(arg, dict) and dict.get('alias', '').startswith("susemanager:"):
+        return {k: v for k, v in arg.items() if k != 'token'}
     return arg
 
 def _immutable(data):
