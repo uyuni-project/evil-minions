@@ -35,7 +35,7 @@ def _zap_kwarg(arg):
 
 def _zap_uyuni_specifics(arg):
     '''Takes a list/dict stucture and returns a copy with SUSE Manager/Uyuni specific varying keys removed'''
-    if isinstance(arg, dict) and dict.get('alias', '').startswith("susemanager:"):
+    if isinstance(arg, dict) and arg.get('alias', '').startswith("susemanager:"):
         return {k: v for k, v in arg.items() if k != 'token'}
     return arg
 
