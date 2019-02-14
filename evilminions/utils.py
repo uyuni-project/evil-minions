@@ -35,8 +35,12 @@ def _zap_kwarg(arg):
 
 def _zap_uyuni_specifics(arg):
     '''Takes a list/dict stucture and returns a copy with SUSE Manager/Uyuni specific varying keys removed'''
-    if isinstance(arg, dict) and arg.get('alias', '').startswith("susemanager:"):
-        return {k: v for k, v in arg.items() if k != 'token'}
+    if isinstance(arg, dict):
+        if arg.get('alias', '').startswith("susemanager:"):
+            cleaned = {k: v for k, v in arg.items() if k != 'token'}
+        else:
+            cleaned = arg
+        return {k: _zap_uyuni_specifics(v) for k, v in cleaned.items()}
     return arg
 
 def _immutable(data):
