@@ -28,19 +28,21 @@ def fun_call_id(fun, args):
     return (fun, _immutable(clean_args))
 
 def _zap_kwarg(arg):
-    '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys recursively removed'''
+    '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys removed'''
     if isinstance(arg, dict):
         return {k: v for k, v in arg.items() if k != '__kwarg__'}
     return arg
 
 def _zap_uyuni_specifics(arg):
-    '''Takes a list/dict stucture and returns a copy with SUSE Manager/Uyuni specific varying keys removed'''
+    '''Takes a list/dict stucture and returns a copy with Uyuni specific varying keys recursively removed'''
+    if isinstance(arg, list):
+        return [_zap_uyuni_specifics(e) for e in list]
     if isinstance(arg, dict):
-        if arg.get('alias', '').startswith("susemanager:"):
-            cleaned = {k: v for k, v in arg.items() if k != 'token'}
+        uyuni_repo = arg.get('alias', '').startswith("susemanager:")
+        if uyuni_repo:
+            return {k: v for k, v in arg.items() if k != 'token'}
         else:
-            cleaned = arg
-        return {k: _zap_uyuni_specifics(v) for k, v in cleaned.items()}
+            return {k: _zap_uyuni_specifics(v) for k, v in arg.items()}
     return arg
 
 def _immutable(data):
