@@ -24,14 +24,26 @@ def replace_recursively(replacements, dump):
 
 def fun_call_id(fun, args):
     '''Returns a hashable object that represents the call of a function, with actual parameters'''
-    clean_args = [_zap_kwarg(arg) for arg in args or []]
+    clean_args = [_zap_uyuni_specifics(_zap_kwarg(arg)) for arg in args or []]
     return (fun, _immutable(clean_args))
 
 def _zap_kwarg(arg):
-    '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys recursively removed'''
+    '''Takes a list/dict stucture and returns a copy with '__kwarg__' keys removed'''
     if isinstance(arg, dict):
         return {k: v for k, v in arg.items() if k != '__kwarg__'}
     return arg
+
+def _zap_uyuni_specifics(data):
+    '''Takes a list/dict stucture and returns a copy with Uyuni specific varying keys recursively removed'''
+    if isinstance(data, dict):
+        uyuni_repo = data.get('alias', '').startswith("susemanager:")
+        if uyuni_repo:
+            return {k: v for k, v in data.items() if k != 'token'}
+        else:
+            return {k: _zap_uyuni_specifics(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_zap_uyuni_specifics(e) for e in data]
+    return data
 
 def _immutable(data):
     '''Returns an immutable version of a list/dict stucture'''
