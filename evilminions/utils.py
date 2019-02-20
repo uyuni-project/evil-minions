@@ -33,17 +33,17 @@ def _zap_kwarg(arg):
         return {k: v for k, v in arg.items() if k != '__kwarg__'}
     return arg
 
-def _zap_uyuni_specifics(arg):
+def _zap_uyuni_specifics(data):
     '''Takes a list/dict stucture and returns a copy with Uyuni specific varying keys recursively removed'''
-    if isinstance(arg, list):
-        return [_zap_uyuni_specifics(e) for e in list]
-    if isinstance(arg, dict):
-        uyuni_repo = arg.get('alias', '').startswith("susemanager:")
+    if isinstance(data, dict):
+        uyuni_repo = data.get('alias', '').startswith("susemanager:")
         if uyuni_repo:
-            return {k: v for k, v in arg.items() if k != 'token'}
+            return {k: v for k, v in data.items() if k != 'token'}
         else:
-            return {k: _zap_uyuni_specifics(v) for k, v in arg.items()}
-    return arg
+            return {k: _zap_uyuni_specifics(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [_zap_uyuni_specifics(e) for e in data]
+    return data
 
 def _immutable(data):
     '''Returns an immutable version of a list/dict stucture'''
