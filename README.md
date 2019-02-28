@@ -72,3 +72,4 @@ Please, use `evil-minions --help` to get the detailed list.
  - only the ZeroMQ transport is supported
  - only `*` and exact minion id targeting are supported at the moment
  - some Salt features are not faithfully reproduced: `mine` events, `beacon` events, and `state.sls`'s `concurrent` option
+ - some Uyuni features are not currently supported: Action Chains
