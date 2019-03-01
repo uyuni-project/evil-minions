@@ -60,6 +60,7 @@ class HydraHead(object):
         self.opts['keysize'] = keysize
         self.opts['acceptance_wait_time'] = 10
         self.opts['acceptance_wait_time_max'] = 0
+        self.opts['auth_tries'] = 600
         self.opts['zmq_filtering'] = False
         self.opts['tcp_keepalive'] = True
         self.opts['tcp_keepalive_idle'] = 300
