@@ -88,9 +88,17 @@ class Hydra(object):
                 if load['cmd'] == '_return':
                     call_id = fun_call_id(load['fun'], load['fun_args'])
                     self.reactions[call_id] = (self.reactions.get(call_id) or []) + [self.current_reactions]
-                    self.log.debug("Hydra #{} learned reaction #{} for call: {}".format(self.hydra_number,
+                    self.log.debug("Hydra #{} learned reaction list #{} ({} reactions) for call: {}".format(
+                                                                                        self.hydra_number,
                                                                                         len(self.reactions[call_id]),
+                                                                                        len(self.current_reactions),
                                                                                         call_id))
+                    for reaction in self.current_reactions:
+                        load = reaction['load']
+                        cmd = load['cmd']
+                        path = "path={}".format(load['path']) if 'path' in load else ''
+                        self.log.debug(" - {}({})".format(cmd, path))
+
                     self.current_reactions = []
 
                 event['header']['duration'] = current_time - self.last_time
