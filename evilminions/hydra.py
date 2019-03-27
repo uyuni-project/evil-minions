@@ -20,7 +20,7 @@ class Hydra(object):
     '''Spawns HydraHeads, listens for messages coming from the Vampire.'''
     def __init__(self, hydra_number):
         self.hydra_number = hydra_number
-        self.current_reactions = []
+        self.current_reactions = {}
         self.reactions = {}
         self.last_time = None
         self.serial = salt.payload.Serial({})
@@ -78,28 +78,37 @@ class Hydra(object):
             current_time = event['header']['time']
             self.last_time = self.last_time or current_time
             if socket == 'PUB' and self.reactions == {}:
-                self.reactions[fun_call_id(None, None)] = [self.current_reactions]
-                self.current_reactions = []
+                initial_reactions = [reaction for pid, reactions in self.current_reactions.items()
+                                                  for reaction in reactions]
+                self.reactions[fun_call_id(None, None)] = [initial_reactions]
                 self.last_time = current_time
             if socket == 'REQ':
                 if load['cmd'] == '_auth':
                     continue
-                self.current_reactions.append(event)
+                pid = event['header']['pid']
+
+                self.current_reactions[pid] = self.current_reactions.get(pid, []) + [event]
+
                 if load['cmd'] == '_return':
                     call_id = fun_call_id(load['fun'], load['fun_args'])
-                    self.reactions[call_id] = (self.reactions.get(call_id) or []) + [self.current_reactions]
+
+                    if call_id not in self.reactions:
+                        self.reactions[call_id] = []
+
+                    self.reactions[call_id] = self.reactions.get(call_id, []) + [self.current_reactions[pid]]
                     self.log.debug("Hydra #{} learned reaction list #{} ({} reactions) for call: {}".format(
                                                                                         self.hydra_number,
                                                                                         len(self.reactions[call_id]),
-                                                                                        len(self.current_reactions),
+                                                                                        len(self.current_reactions[pid]),
                                                                                         call_id))
-                    for reaction in self.current_reactions:
+                    for reaction in self.current_reactions[pid]:
                         load = reaction['load']
                         cmd = load['cmd']
-                        path = "path={}".format(load['path']) if 'path' in load else ''
-                        self.log.debug(" - {}({})".format(cmd, path))
+                        path = "path={} ".format(load['path']) if 'path' in load else ''
+                        pid = "pid={}".format(reaction['header']['pid'])
+                        self.log.debug(" - {}({}{})".format(cmd, path, pid))
 
-                    self.current_reactions = []
+                    self.current_reactions[pid] = []
 
                 event['header']['duration'] = current_time - self.last_time
                 self.last_time = current_time

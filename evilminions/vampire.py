@@ -1,6 +1,7 @@
 '''Intercepts ZeroMQ traffic'''
 
 import logging
+import os
 import time
 
 import tornado.gen
@@ -36,6 +37,7 @@ class Vampire(object):
         header = {
             'socket' : socket,
             'time' : time.time(),
+            'pid' : os.getpid(),
         }
         event = {
             'header' : header,
