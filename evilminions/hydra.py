@@ -77,11 +77,22 @@ class Hydra(object):
             socket = event['header']['socket']
             current_time = event['header']['time']
             self.last_time = self.last_time or current_time
+
+            # if this is the very first PUB message we receive, store all reactions so far
+            # as minion start reactions (fun_call_id(None, None))
             if socket == 'PUB' and self.reactions == {}:
                 initial_reactions = [reaction for pid, reactions in self.current_reactions.items()
                                                   for reaction in reactions]
                 self.reactions[fun_call_id(None, None)] = [initial_reactions]
                 self.last_time = current_time
+
+                self.log.debug("Hydra #{} learned initial reaction list ({} reactions)".format(self.hydra_number,
+                                                                                               len(initial_reactions)))
+                for reaction in initial_reactions:
+                    cmd = reaction['load']['cmd']
+                    pid = "pid={}".format(reaction['header']['pid'])
+                    self.log.debug(" - {}({})".format(cmd, pid))
+
             if socket == 'REQ':
                 if load['cmd'] == '_auth':
                     continue
