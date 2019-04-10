@@ -55,8 +55,16 @@ class Hydra(object):
         delays = [ramp_up_delay * ((head_number - first_head_number) * hydra_count + self.hydra_number)
                   for head_number in chunk]
         offset_head_numbers = [head_number + offset for head_number in chunk]
+
+        summary = None
+        if self.hydra_number == 0:
+            # set up monitoring
+            from prometheus_client import start_http_server, Summary
+            summary = Summary('request_processing_seconds', 'Time spent mimicking', ['fun'])
+            start_http_server(8004)
+
         heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains,
-                           delays[i], slowdown_factor, self.reactions) for i in range(len(chunk))]
+                           delays[i], slowdown_factor, self.reactions, summary) for i in range(len(chunk))]
 
         # start heads!
         for head in heads:

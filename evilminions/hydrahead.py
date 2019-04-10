@@ -4,6 +4,7 @@ from distutils.dir_util import mkpath
 import hashlib
 import logging
 import os
+import time
 from uuid import UUID, uuid5
 
 import tornado.gen
@@ -15,12 +16,13 @@ from evilminions.utils import replace_recursively, fun_call_id
 
 class HydraHead(object):
     '''Replicates the behavior of a minion'''
-    def __init__(self, minion_id, io_loop, keysize, opts, grains, ramp_up_delay, slowdown_factor, reactions):
+    def __init__(self, minion_id, io_loop, keysize, opts, grains, ramp_up_delay, slowdown_factor, reactions, summary):
         self.minion_id = minion_id
         self.io_loop = io_loop
         self.ramp_up_delay = ramp_up_delay
         self.slowdown_factor = slowdown_factor
         self.reactions = reactions
+        self.summary = summary
         self.current_time = 0
 
         self.current_jobs = []
@@ -75,6 +77,7 @@ class HydraHead(object):
         self.opts['verify_master_pubkey_sign'] = False
         self.opts['always_verify_signature'] = False
 
+
     @tornado.gen.coroutine
     def start(self):
         '''Opens ZeroMQ sockets, starts listening to PUB events and kicks off initial REQs'''
@@ -95,6 +98,9 @@ class HydraHead(object):
     @tornado.gen.coroutine
     def mimic(self, load):
         '''Finds appropriate reactions to a PUB message and dispatches them'''
+        import time
+        start = time.time()
+
         load = load['load']
         fun = load['fun']
         tgt = load['tgt']
@@ -105,6 +111,7 @@ class HydraHead(object):
             (tgt_type == 'list' and self.minion_id not in tgt)):
             # ignore call that targets a different minion
             return
+
 
         # react in ad-hoc ways to some special calls
         if fun == 'test.ping':
@@ -117,22 +124,33 @@ class HydraHead(object):
             # try to find a suitable reaction and use it
             call_id = fun_call_id(load['fun'], load['arg'] or [])
 
-            reactions = self.get_reactions(call_id)
+            reactions = self.get_reactions(call_id, fun)
             while not reactions:
                 self.log.debug("No known reaction for call: {}, sleeping 1 second and retrying".format(call_id))
                 yield tornado.gen.sleep(1)
-                reactions = self.get_reactions(call_id)
+                reactions = self.get_reactions(call_id, fun)
 
             self.current_time = reactions[0]['header']['time']
             yield self.react(load, reactions)
 
-    def get_reactions(self, call_id):
+            if fun == 'state.apply':
+                self.log.error("state.apply load %s", load)
+                self.log.info("state.apply %d reactions %s", len(reactions), reactions)
+                self.log.error("state.apply call_id %s", call_id)
+
+        if self.summary:
+            self.summary.labels(fun).observe(time.time()-start)
+
+    def get_reactions(self, call_id, fun):
         '''Returns reactions for the specified call_id'''
         reaction_sets = self.reactions.get(call_id)
         if not reaction_sets:
             return None
 
-        # if multiple reactions were produced in different points in time, attempt to respect
+        if fun == 'state.apply':
+            self.log.error("state.apply reaction sets count %d", len(reaction_sets))
+
+        # if multiple reactions were produced at different points in time, attempt to respect
         # historical order (pick the one which has the lowest timestamp after the last processed)
         future_reaction_sets = filter(lambda s: s[0]['header']['time'] >= self.current_time, reaction_sets)
         if future_reaction_sets:
