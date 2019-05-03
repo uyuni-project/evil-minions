@@ -2,7 +2,7 @@
 
 ![Evil Minions from the movie Despicable Me 2](https://vignette3.wikia.nocookie.net/despicableme/images/5/52/Screenshot_2016-02-10-01-09-16.jpg/revision/latest?cb=20161028002525)
 
-`evil-minions` is a load generator for [Salt Open](https://saltstack.com/salt-open-source/). It is used at SUSE for Salt, [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](https://www.suse.com/products/suse-manager/) scalability testing.
+`evil-minions` is a load generator for [Salt](https://github.com/saltstack/salt). It is used at SUSE for Salt, [Uyuni](https://www.uyuni-project.org/) and [SUSE Manager](https://www.suse.com/products/suse-manager/) scalability testing.
 
 ### Intro
 
