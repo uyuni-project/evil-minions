@@ -64,6 +64,14 @@ By default, evil minions will respond as fast as possible, which might not be ap
  - `2.0` makes `evil-minion` react twice as slow as the original minion
  - `0.5` makes `evil-minion` react twice as fast as the original minion
 
+#### `--random-slowdown-factor` <number>
+
+By setting the `random-slowdown-factor` value, the evil minions will respond using the user defined `slowdown-factor` value plus a random extra delay expressed as a percentage of the original time, for example:
+ - with a `slowdown-factor` of `1.0` and a `random-slowdown-factor` of `0.2`, the evil-minions will reply with a slowdown-factor in the range of `1.0` and `1.2`. This value it's calculated per-evil-minion and is constant throughout the whole execution.
+
+The default value of `--random-slowdown-factor` parameter is 0.
+For more information, see `--slowdown-factor` section above.
+
 #### Other parameters
 
 Please, use `evil-minions --help` to get the detailed list.

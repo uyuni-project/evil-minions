@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--slowdown-factor', dest='slowdown_factor', type=float, default=0.0,
                        help='slow down evil minions (default is 0.0 "as fast as possible", ' +
                        '1.0 is "as fast as the original")')
+    parser.add_argument('--random-slowdown-factor', dest='random_slowdown_factor', type=float, default=0.0,
+                       help='a random extra delay expressed as a percentage of the original time (default: 0.0)')
     parser.add_argument('--processes', dest='processes', type=int, default=cpu_count(),
                        help='number of concurrent processes (default is the CPU count: %d)' % cpu_count())
     parser.add_argument('--keysize', dest='keysize', type=int, default=2048,
@@ -55,6 +57,7 @@ def main():
         'offset': args.offset,
         'ramp_up_delay': args.ramp_up_delay,
         'slowdown_factor': args.slowdown_factor,
+        'random_slowdown_factor': args.random_slowdown_factor,
         'keysize': args.keysize,
         'semaphore': semaphore
     }) for i, chunk in enumerate(chunks)]

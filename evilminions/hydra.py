@@ -9,6 +9,8 @@ import salt.config
 import salt.loader
 import salt.payload
 
+import random
+
 from evilminions.hydrahead import HydraHead
 from evilminions.utils import fun_call_id
 
@@ -27,7 +29,7 @@ class Hydra(object):
         self.log = None
 
     def start(self, hydra_count, chunk, prefix, offset,
-              ramp_up_delay, slowdown_factor, keysize, semaphore):
+              ramp_up_delay, slowdown_factor, random_slowdown_factor, keysize, semaphore):
         '''Per-process entry point (one per Hydra)'''
 
         # set up logging
@@ -55,8 +57,10 @@ class Hydra(object):
         delays = [ramp_up_delay * ((head_number - first_head_number) * hydra_count + self.hydra_number)
                   for head_number in chunk]
         offset_head_numbers = [head_number + offset for head_number in chunk]
-        heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains,
-                           delays[i], slowdown_factor, self.reactions) for i in range(len(chunk))]
+
+        slowdown_factors = self._resolve_slowdown_factors(slowdown_factor, random_slowdown_factor, len(chunk))
+        heads = [HydraHead('{}-{}'.format(prefix, offset_head_numbers[i]), io_loop, keysize, opts, grains, delays[i],
+                           slowdown_factors[i], self.reactions) for i in range(len(chunk))]
 
         # start heads!
         for head in heads:
@@ -65,6 +69,10 @@ class Hydra(object):
         semaphore.release()
 
         io_loop.start()
+
+    def _resolve_slowdown_factors(self, slowdown_factor, random_slowdown_factor, heads_count):
+        random.seed(self.hydra_number)
+        return [(slowdown_factor + random.randint(0, random_slowdown_factor * 100) / 100.0) for i in range(heads_count)]
 
     @tornado.gen.coroutine
     def update_reactions(self, packed_events):
