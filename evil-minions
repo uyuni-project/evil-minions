@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 '''
 Script to start a salt-minion that will act as many minions (from salt-master's
 point of view).
@@ -79,11 +79,12 @@ def main():
 
     # restore salt-minion's orignal command line args and launch it
     sys.argv = [sys.argv[0]] + remaining_args
-    execfile(distutils.spawn.find_executable('salt-minion'))
+    salt_minion_executable = distutils.spawn.find_executable('salt-minion')
+    exec(compile(open(salt_minion_executable).read(), salt_minion_executable, 'exec'))
 
 def minion_chunks(count, processes):
     '''Returns chunks of minion indexes, per process (eg. 4 minions and 3 processes: [[0, 1], [2], [3]])'''
-    minions_per_process = count / processes
+    minions_per_process = count // processes
     rest = count % processes
     lengths = [minions_per_process + 1] * rest + [minions_per_process] * (processes - rest)
     starts = [sum(lengths[:i]) for i in range(processes)]

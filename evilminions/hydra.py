@@ -44,7 +44,7 @@ class Hydra(object):
         context = zmq.Context()
         socket = context.socket(zmq.SUB)
         socket.connect('ipc:///tmp/evil-minions-pub.ipc')
-        socket.setsockopt(zmq.SUBSCRIBE, "")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "")
         stream = zmq.eventloop.zmqstream.ZMQStream(socket, io_loop)
         stream.on_recv(self.update_reactions)
 

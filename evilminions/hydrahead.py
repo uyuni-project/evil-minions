@@ -4,6 +4,7 @@ from distutils.dir_util import mkpath
 import hashlib
 import logging
 import os
+import socket
 from uuid import UUID, uuid5
 
 import tornado.gen
@@ -28,7 +29,7 @@ class HydraHead(object):
         # Compute replacement dict
         self.replacements = {
             grains['id']: minion_id,
-            grains['machine_id']: hashlib.md5(minion_id).hexdigest(),
+            grains['machine_id']: hashlib.md5(minion_id.encode('utf-8')).hexdigest(),
             grains['uuid']: str(uuid5(UUID('d77ed710-0deb-47d9-b053-f2fa2ef78106'), minion_id))
         }
 
@@ -38,7 +39,7 @@ class HydraHead(object):
 
         # Override calculated settings
         self.opts['master_uri'] = 'tcp://%s:4506' % self.opts['master']
-        self.opts['master_ip'] = self.opts['master']
+        self.opts['master_ip'] = socket.gethostbyname(self.opts['master'])
 
         # Override directory settings
         pki_dir = '/tmp/%s' % minion_id
@@ -134,7 +135,7 @@ class HydraHead(object):
 
         # if multiple reactions were produced in different points in time, attempt to respect
         # historical order (pick the one which has the lowest timestamp after the last processed)
-        future_reaction_sets = filter(lambda s: s[0]['header']['time'] >= self.current_time, reaction_sets)
+        future_reaction_sets = [s for s in reaction_sets if s[0]['header']['time'] >= self.current_time]
         if future_reaction_sets:
             return future_reaction_sets[0]
 
@@ -156,7 +157,7 @@ class HydraHead(object):
                 request['tok'] = self.tok
             if request['cmd'] == '_return' and request.get('fun') == load.get('fun'):
                 request['jid'] = load['jid']
-                if load.has_key('metadata'):
+                if 'metadata' in load:
                     request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
             yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
             yield self.req_channel.send(request, timeout=60)
@@ -180,8 +181,8 @@ class HydraHead(object):
     @tornado.gen.coroutine
     def react_to_find_job(self, load):
         '''Dispatches a reaction to a find_job call'''
-        jobs = filter(lambda j: j['jid'] == load['arg'][0], self.current_jobs)
-        ret = dict(jobs[0].items() + {'pid': 1234}.items()) if jobs else {}
+        jobs = [j for j in self.current_jobs if j['jid'] == load['arg'][0]]
+        ret = dict(list(jobs[0].items()) + list({'pid': 1234}.items())) if jobs else {}
 
         request = {
             'cmd': '_return',
