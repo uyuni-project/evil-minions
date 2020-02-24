@@ -159,8 +159,12 @@ class HydraHead(object):
                 request['jid'] = load['jid']
                 if 'metadata' in load:
                     request['metadata']['suma-action-id'] = load['metadata'].get('suma-action-id')
-            yield tornado.gen.sleep(reaction['header']['duration'] * self.slowdown_factor)
-            yield self.req_channel.send(request, timeout=60)
+            header = reaction['header']
+            duration = header['duration']
+            yield tornado.gen.sleep(duration * self.slowdown_factor)
+            method = header['method']
+            kwargs = header['kwargs']
+            yield getattr(self.req_channel, method)(request, **kwargs)
         self.current_jobs.remove(load)
 
     @tornado.gen.coroutine
