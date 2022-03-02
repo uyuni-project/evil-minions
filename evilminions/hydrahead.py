@@ -85,7 +85,7 @@ class HydraHead(object):
 
         factory_kwargs = {'timeout': 60, 'safe': True, 'io_loop': self.io_loop}
         pub_channel = salt.transport.client.AsyncPubChannel.factory(self.opts, **factory_kwargs)
-        self.tok = pub_channel.auth.gen_token('salt')
+        self.tok = pub_channel.auth.gen_token(b'salt')
         yield pub_channel.connect()
         self.req_channel = salt.transport.client.AsyncReqChannel.factory(self.opts, **factory_kwargs)
 
